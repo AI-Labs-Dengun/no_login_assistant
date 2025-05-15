@@ -905,6 +905,9 @@ const ChatComponent = () => {
             )}
           </form>
         </footer>
+        <div className="w-full px-6 pb-2">
+          <p className="text-xs text-white/60 text-center">{t('chat.disclaimer')}</p>
+        </div>
       </div>
       <CommentModal
         isOpen={commentModal.open}
