@@ -24,70 +24,50 @@ export async function POST(req: Request) {
       );
     }
 
+    // Verifica se o email do administrador está configurado
+    if (!process.env.ADMIN_EMAIL) {
+      throw new Error('Email do administrador não configurado');
+    }
+
     // Prepara o conteúdo do email
-    const subject = 'Registro da sua conversa';
+    const subject = 'Nova conversa registrada';
     const text = `
-      Detalhes do seu contato:
+      Detalhes do contato:
       ${email ? `Email: ${email}` : ''}
       ${phone ? `Telefone: ${phone}` : ''}
       
-      Sua conversa:
+      Conversa:
       ${conversation}
     `;
 
     const html = `
-      <h2>Registro da sua conversa</h2>
+      <h2>Nova conversa registrada</h2>
       <div style="margin-bottom: 20px;">
         ${email ? `<p><strong>Email:</strong> ${email}</p>` : ''}
         ${phone ? `<p><strong>Telefone:</strong> ${phone}</p>` : ''}
       </div>
-      <h3>Sua conversa:</h3>
+      <h3>Conversa:</h3>
       <pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px;">${conversation}</pre>
     `;
 
-    // Envia o email para o usuário
+    // Envia o email apenas para o admin
     await transporter.sendMail({
       from: process.env.SMTP_FROM,
-      to: email || process.env.ADMIN_EMAIL, // Se não tiver email, envia para o admin
+      to: process.env.ADMIN_EMAIL,
       subject,
       text,
       html,
     });
 
-    // Se tiver email do usuário, envia uma cópia para o admin
-    if (email && process.env.ADMIN_EMAIL) {
-      await transporter.sendMail({
-        from: process.env.SMTP_FROM,
-        to: process.env.ADMIN_EMAIL,
-        subject: 'Nova conversa registrada',
-        text: `
-          Nova conversa registrada:
-          
-          Email do usuário: ${email}
-          Telefone: ${phone || 'Não informado'}
-          
-          Conversa:
-          ${conversation}
-        `,
-        html: `
-          <h2>Nova conversa registrada</h2>
-          <p><strong>Email do usuário:</strong> ${email}</p>
-          <p><strong>Telefone:</strong> ${phone || 'Não informado'}</p>
-          <h3>Conversa:</h3>
-          <pre>${conversation}</pre>
-        `,
-      });
-    }
-
     return NextResponse.json({
       success: true,
-      message: 'Email enviado com sucesso'
+      message: 'Registro enviado com sucesso'
     });
 
   } catch (error) {
     console.error('Erro ao enviar email:', error);
     return NextResponse.json(
-      { error: 'Falha ao enviar email' },
+      { error: 'Falha ao enviar registro' },
       { status: 500 }
     );
   }
