@@ -334,12 +334,21 @@ const ChatComponent = () => {
       await sendEmailWithConversation(email, phone);
     }
 
+    // Prepara o histórico da conversa para enviar ao ChatGPT
+    const conversationHistory = messages.map(msg => ({
+      user: msg.user,
+      content: msg.content
+    }));
+
     const prompt = `${newMessage}\n\nPlease answer ONLY in ${languageNames[language as Language] || 'English'}, regardless of the language of the question. Do not mention language or your ability to assist in other languages. Keep your answer short and concise.`;
     try {
       const res = await fetch('/api/chatgpt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: prompt }),
+        body: JSON.stringify({ 
+          message: prompt,
+          conversationHistory 
+        }),
       });
       const data = await res.json();
       setMessages((prev) => [
@@ -598,10 +607,19 @@ const ChatComponent = () => {
         setMessages((prev) => [...prev, userMsg]);
         setLoading(true);
         try {
+          // Prepara o histórico da conversa para enviar ao ChatGPT
+          const conversationHistory = messages.map(msg => ({
+            user: msg.user,
+            content: msg.content
+          }));
+
           const res = await fetch('/api/chatgpt', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: data.text }),
+            body: JSON.stringify({ 
+              message: data.text,
+              conversationHistory 
+            }),
           });
           const aiData = await res.json();
           setMessages((prev) => [
@@ -613,7 +631,6 @@ const ChatComponent = () => {
               created_at: new Date().toISOString(),
             },
           ]);
-          // setVoiceModalMode('ready-to-record'); //Gravador de audio automatico após resposta do chat 
         } catch (err) {
           setMessages((prev) => [
             ...prev,
