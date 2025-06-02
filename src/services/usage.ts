@@ -1,5 +1,3 @@
-import { reportUsage } from 'dengun_ai-admin-client';
-
 interface UsageData {
   tokens: number;
   requests: number;
@@ -7,6 +5,32 @@ interface UsageData {
   userId: string;
   tenantId: string;
   botId: string;
+}
+
+async function reportUsage(data: {
+  tokens: number;
+  requests: number;
+  duration: number;
+  metadata: {
+    userId: string;
+    tenantId: string;
+    botId: string;
+  };
+}) {
+  const response = await fetch(`${process.env.DASHBOARD_URL}/api/usage`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.BOT_TOKEN}`
+    },
+    body: JSON.stringify(data)
+  });
+
+  if (!response.ok) {
+    throw new Error(`Erro ao reportar uso: ${response.statusText}`);
+  }
+
+  return response.json();
 }
 
 export async function reportBotUsage(usage: UsageData) {
