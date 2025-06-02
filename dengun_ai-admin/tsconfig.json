@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "lib": [
+      "es2018",
+      "dom"
+    ],
+    "declaration": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "types": [
+      "node",
+      "jest"
+    ]
+  },
+  "include": [
+    "tests/**/*",
+    "config/**/*",
+    "examples/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
