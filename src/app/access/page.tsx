@@ -15,19 +15,13 @@ export default function AccessPage() {
       const session = sessionManager.getSession(token);
       if (session) {
         // Redirecionar para a interface principal com os dados da sessão
-        router.push({
-          pathname: '/chat',
-          query: { session: token }
-        });
+        router.push(`/chat?session=${token}`);
       } else {
         // Tentar validar o token
         sessionManager.validateAndStoreSession(token)
           .then(session => {
             if (session) {
-              router.push({
-                pathname: '/chat',
-                query: { session: token }
-              });
+              router.push(`/chat?session=${token}`);
             } else {
               router.push('/unauthorized');
             }
