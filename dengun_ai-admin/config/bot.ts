@@ -69,8 +69,7 @@ class TenantSyncManager {
           if (envContent.includes('BOT_TOKEN=')) {
             envContent = envContent.replace(/BOT_TOKEN=.*/, 'BOT_TOKEN="' + token + '"');
           } else {
-            envContent = envContent + '
-BOT_TOKEN="' + token + '"';
+            envContent = envContent + '\nBOT_TOKEN="' + token + '"';
           }
           
           fs.writeFileSync(envPath, envContent);
