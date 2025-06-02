@@ -6,15 +6,52 @@ import fs from 'fs';
 // Carrega as variáveis de ambiente
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
+// Validação das variáveis de ambiente obrigatórias
+const requiredEnvVars = [
+  'DASHBOARD_URL',
+  'BOT_NAME',
+  'BOT_DESCRIPTION',
+  'BOT_CAPABILITIES',
+  'BOT_CONTACT_EMAIL',
+  'BOT_WEBSITE',
+  'MAX_TOKENS_PER_REQUEST',
+  'MAX_REQUESTS_PER_MINUTE',
+  'SESSION_DURATION',
+  'TOKEN_REFRESH_THRESHOLD'
+];
+
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    throw new Error(`Variável de ambiente obrigatória não encontrada: ${envVar}`);
+  }
+}
+
+// Interface para a configuração do bot
+interface BotConfig {
+  baseUrl: string;
+  botName: string;
+  botDescription: string;
+  botCapabilities: string[];
+  contactEmail: string;
+  website: string;
+  maxTokensPerRequest: number;
+  maxRequestsPerMinute: number;
+  sessionDuration: number;
+  tokenRefreshThreshold: number;
+}
+
 // Configuração base do bot
-const botConfig = {
-  baseUrl: process.env.DASHBOARD_URL || 'http://localhost:3000',
-  botName: process.env.BOT_NAME,
-  botDescription: process.env.BOT_DESCRIPTION,
-  botCapabilities: process.env.BOT_CAPABILITIES?.split(',') || [],
-  contactEmail: process.env.BOT_CONTACT_EMAIL,
-  website: process.env.BOT_WEBSITE,
-  maxTokensPerRequest: parseInt(process.env.MAX_TOKENS_PER_REQUEST || '1000')
+const botConfig: BotConfig = {
+  baseUrl: process.env.DASHBOARD_URL!,
+  botName: process.env.BOT_NAME!,
+  botDescription: process.env.BOT_DESCRIPTION!,
+  botCapabilities: process.env.BOT_CAPABILITIES!.split(','),
+  contactEmail: process.env.BOT_CONTACT_EMAIL!,
+  website: process.env.BOT_WEBSITE!,
+  maxTokensPerRequest: parseInt(process.env.MAX_TOKENS_PER_REQUEST!),
+  maxRequestsPerMinute: parseInt(process.env.MAX_REQUESTS_PER_MINUTE!),
+  sessionDuration: parseInt(process.env.SESSION_DURATION!),
+  tokenRefreshThreshold: parseInt(process.env.TOKEN_REFRESH_THRESHOLD!)
 };
 
 // Classe para gerenciar a sincronização dos tenants
