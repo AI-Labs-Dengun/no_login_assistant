@@ -1,4 +1,4 @@
-import { verifyAccessToken } from 'dengun_ai-admin-client';
+import { jwtDecode } from 'jwt-decode';
 
 export interface SessionData {
   userId: string;
@@ -8,6 +8,15 @@ export interface SessionData {
   tokenLimit: number;
   userData: any;
   lastActivity: number;
+}
+
+interface TokenClaims {
+  sub: string;
+  tenant_id: string;
+  bot_id: string;
+  permissions: string[];
+  token_limit: number;
+  exp: number;
 }
 
 class SessionManager {
@@ -29,7 +38,12 @@ class SessionManager {
 
   public async validateAndStoreSession(token: string): Promise<SessionData | null> {
     try {
-      const claims = await verifyAccessToken(token);
+      const claims = jwtDecode<TokenClaims>(token);
+      
+      // Verificar se o token expirou
+      if (claims.exp * 1000 < Date.now()) {
+        return null;
+      }
       
       const sessionData: SessionData = {
         userId: claims.sub,
