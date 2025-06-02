@@ -1,16 +1,4 @@
 {
-  "env": {
-    "DASHBOARD_URL": "https://ai-admin-dashboard.vercel.app/",
-    "BOT_NAME": "No Login Assistant",
-    "BOT_DESCRIPTION": "Assistente que não requer login",
-    "BOT_CAPABILITIES": "chat,assistance",
-    "BOT_CONTACT_EMAIL": "ai@dengun.com",
-    "BOT_WEBSITE": "https://no-login-assistant.vercel.app/",
-    "MAX_TOKENS_PER_REQUEST": "1000",
-    "MAX_REQUESTS_PER_MINUTE": "60",
-    "SESSION_DURATION": "900",
-    "TOKEN_REFRESH_THRESHOLD": "300"
-  },
   "headers": [
     {
       "source": "/access",
