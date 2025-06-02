@@ -78,8 +78,7 @@ class TenantSyncManager {
           console.log('✅ Bot registrado com sucesso!');
         } catch (error) {
           console.error('❌ Erro ao registrar bot:', error);
-          console.log('
-🔍 Verifique se:');
+          console.log('\n🔍 Verifique se:');
           console.log('1. O dashboard está rodando em ' + botConfig.baseUrl);
           console.log('2. A rota /api/bots está implementada no dashboard');
           console.log('3. O formato dos dados enviados está correto');
@@ -166,8 +165,7 @@ class TenantSyncManager {
       if (envContent.match(regex)) {
         envContent = envContent.replace(regex, var_);
       } else {
-        envContent = envContent + '
-' + var_;
+        envContent = envContent + '\n' + var_;
       }
     }
 
@@ -180,10 +178,7 @@ class TenantSyncManager {
 
     // Remover todas as variáveis do tenant
     const regex = new RegExp('^TENANT_' + tenantId + '_.*$', 'gm');
-    envContent = envContent.replace(regex, '').replace(/
-
-+/g, '
-');
+    envContent = envContent.replace(regex, '').replace(/\n+/g, '\n');
 
     fs.writeFileSync(envPath, envContent);
   }
