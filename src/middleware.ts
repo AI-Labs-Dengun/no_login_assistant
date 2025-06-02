@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { sessionManager } from './lib/session-manager';
 import { config as urlConfig } from './config/urls';
+import type { SessionData } from './lib/session-manager';
 
 export async function middleware(request: NextRequest) {
   // Verificar se é uma rota que requer autenticação
@@ -16,7 +17,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Verificar se já existe uma sessão válida
-  let session = sessionManager.getSession(token);
+  let session: SessionData | undefined | null = sessionManager.getSession(token);
   
   if (!session) {
     // Tentar validar e criar nova sessão

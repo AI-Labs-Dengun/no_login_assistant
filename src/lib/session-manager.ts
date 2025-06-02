@@ -1,6 +1,6 @@
 import { verifyAccessToken } from 'dengun_ai-admin-client';
 
-interface SessionData {
+export interface SessionData {
   userId: string;
   tenantId: string;
   botId: string;
