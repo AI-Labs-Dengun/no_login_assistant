@@ -1,54 +1,56 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { sessionManager } from './lib/session-manager';
-import { config as urlConfig } from './config/urls';
-import type { SessionData } from './lib/session-manager';
+import { JWTManager } from './lib/jwt-manager';
 
 export async function middleware(request: NextRequest) {
-  // Verificar se é uma rota que requer autenticação
-  if (!request.nextUrl.pathname.startsWith('/access')) {
-    return NextResponse.next();
+  // Configuração de CORS para requisições OPTIONS
+  if (request.method === 'OPTIONS') {
+    return new NextResponse(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': 'http://localhost:3000',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'X-Requested-With, Content-Type, Authorization',
+        'Access-Control-Max-Age': '86400',
+      },
+    });
   }
 
-  const token = request.nextUrl.searchParams.get('token');
-  
-  if (!token) {
-    return NextResponse.redirect(new URL('/unauthorized', urlConfig.botUrl));
-  }
+  // Verificar se é uma rota de proxy
+  if (request.nextUrl.pathname.startsWith('/proxy/')) {
+    const jwt = request.headers.get('Authorization')?.replace('Bearer ', '');
+    
+    if (!jwt) {
+      return NextResponse.json(
+        { error: 'Token JWT não fornecido' },
+        { status: 401 }
+      );
+    }
 
-  // Verificar se já existe uma sessão válida
-  let session: SessionData | undefined | null = sessionManager.getSession(token);
-  
-  if (!session) {
-    // Tentar validar e criar nova sessão
-    session = await sessionManager.validateAndStoreSession(token);
-    if (!session) {
-      return NextResponse.redirect(new URL('/unauthorized', urlConfig.botUrl));
+    try {
+      const jwtManager = JWTManager.getInstance();
+      const payload = await jwtManager.verifyToken(jwt);
+      
+      // Adicionar dados do JWT ao request
+      const requestHeaders = new Headers(request.headers);
+      requestHeaders.set('x-jwt-data', JSON.stringify(payload));
+
+      return NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      });
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Token JWT inválido' },
+        { status: 401 }
+      );
     }
   }
 
-  // Verificar se precisa renovar o token
-  if (sessionManager.shouldRefreshToken(token)) {
-    // Redirecionar para o dashboard para renovar o token
-    return NextResponse.redirect(
-      new URL(`/bots/refresh?bot_id=${session.botId}&tenant_id=${session.tenantId}`, urlConfig.dashboardUrl)
-    );
-  }
-
-  // Atualizar timestamp de atividade
-  sessionManager.updateSessionActivity(token);
-
-  // Adicionar dados da sessão ao request
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-session-data', JSON.stringify(session));
-
-  return NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: '/access/:path*',
+  matcher: ['/proxy/:path*'],
 }; 
