@@ -7,14 +7,19 @@ export function middleware(request: NextRequest) {
     return new NextResponse(null, {
       status: 204,
       headers: {
-        'Access-Control-Allow-Origin': 'http://localhost:3000',
+        'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Authorization, Content-Type',
       },
     });
   }
 
-  // 2. Verifica se tem token
+  // 2. Permite acesso à rota chatgpt sem autenticação
+  if (request.nextUrl.pathname.startsWith('/api/chatgpt')) {
+    return NextResponse.next();
+  }
+
+  // 3. Verifica se tem token para outras rotas
   const token = request.headers.get('authorization');
   if (!token) {
     return new NextResponse(
@@ -26,7 +31,7 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  // 3. Continua a requisição
+  // 4. Continua a requisição
   return NextResponse.next();
 }
 
