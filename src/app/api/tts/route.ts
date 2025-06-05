@@ -5,18 +5,30 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Mapeamento de idiomas para vozes
+const languageToVoice: Record<string, string> = {
+  'pt': 'nova',
+  'en': 'alloy',
+  'es': 'echo',
+  'fr': 'fable',
+  'de': 'onyx'
+};
+
 export async function POST(req: Request) {
   try {
-    const { text } = await req.json();
+    const { text, language = 'pt' } = await req.json();
     if (!text) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
     }
 
+    // Seleciona a voz apropriada para o idioma
+    const voice = languageToVoice[language] || 'nova';
+
     // Call OpenAI TTS API
     const response = await openai.audio.speech.create({
-      model: 'tts-1', // or 'tts-1-hd' if available
+      model: 'tts-1',
       input: text,
-      voice: 'nova', // or 'alloy', 'echo', etc. (choose preferred voice)
+      voice: voice,
       response_format: 'mp3',
     });
 

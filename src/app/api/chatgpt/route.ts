@@ -14,32 +14,41 @@ type ChatMessage = {
 
 export async function POST(req: Request) {
   try {
-    // 2. Processamento da requisição
-    const { message, conversationHistory } = await req.json();
+    const { message, conversationHistory = [] } = await req.json();
+    if (!message) {
+      return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+    }
 
     // Read instructions and knowledge from public directory
     const instructions = await fs.readFile(path.join(process.cwd(), 'public', 'AI_INSTRUCTIONS.md'), 'utf-8');
     const knowledge = await fs.readFile(path.join(process.cwd(), 'public', 'AI_KNOWLEDGE.md'), 'utf-8');
 
     // Create a single, comprehensive system message
-    const systemMessage = `Você é o assistente de IA da Dengun, uma Startup Studio e Agência Digital sediada em Faro, Portugal. Sua função é ajudar os visitantes a entender os serviços da Dengun e guiá-los em sua jornada de transformação digital.
+    const systemMessage = `You are the AI assistant of Dengun, a Startup Studio and Digital Agency based in Faro, Portugal. Your role is to help visitors understand Dengun's services and guide them through their digital transformation journey.
 
-[INSTRUÇÕES]
-${instructions}
+    [INSTRUCTIONS]
+    ${instructions}
 
-[BASE DE CONHECIMENTO]
-${knowledge}
+    [KNOWLEDGE BASE]
+    ${knowledge}
 
-IMPORTANTE:
-- Seja criativo e original em suas respostas
-- Use o tom e estilo definidos nas instruções
-- Incorpore informações relevantes da base de conhecimento
-- Nunca copie exemplos diretamente das instruções
-- Evite começar suas respostas com cumprimentos (olá, oi, etc) ou afirmações (claro, sim, etc)
-- Responda de forma direta e natural, como em uma conversa real
-- Mantenha suas respostas concisas e objetivas
-- Use linguagem coloquial e amigável, mas mantenha o profissionalismo
-- Considere o contexto da conversa anterior para dar respostas mais precisas e relevantes`;
+    IMPORTANT:
+    - ALWAYS respond in the SAME LANGUAGE as the user's message
+    - If the user writes in Portuguese, respond in Portuguese
+    - If the user writes in Spanish, respond in Spanish
+    - If the user writes in French, respond in French
+    - If the user writes in German, respond in German
+    - If the user writes in English, respond in English
+    - Never translate or change the language of your response
+    - Be creative and original in your responses
+    - Use the tone and style defined in the instructions
+    - Incorporate relevant information from the knowledge base
+    - Never copy examples directly from the instructions
+    - Avoid starting your responses with greetings (hello, hi, etc) or affirmations (sure, yes, etc)
+    - Respond directly and naturally, as in a real conversation
+    - Keep your responses concise and objective
+    - Use colloquial and friendly language while maintaining professionalism
+    - Consider the context of the previous conversation to provide more accurate and relevant responses`;
 
     // Prepara o array de mensagens incluindo o histórico
     const messages: ChatMessage[] = [
@@ -60,21 +69,15 @@ IMPORTANTE:
     messages.push({ role: "user", content: message });
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4",
       messages,
       temperature: 0.8,
       max_tokens: 1000,
     });
 
-    return NextResponse.json({
-      reply: completion.choices[0].message.content
-    });
-
+    return NextResponse.json({ reply: completion.choices[0].message.content });
   } catch (error) {
-    console.error('Error in ChatGPT API:', error);
-    return NextResponse.json(
-      { error: 'Failed to get response from ChatGPT' },
-      { status: 500 }
-    );
+    console.error('ChatGPT error:', error);
+    return NextResponse.json({ error: 'Failed to get response from ChatGPT' }, { status: 500 });
   }
 } 
