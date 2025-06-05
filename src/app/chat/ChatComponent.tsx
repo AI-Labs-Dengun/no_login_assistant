@@ -477,6 +477,15 @@ const ChatComponent = () => {
     console.log('startRecording called');
     if (typeof window === 'undefined') return;
     try {
+      // Para o áudio atual se estiver tocando
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        setIsAudioPlaying(false);
+        setIsAudioPaused(false);
+        setCurrentPlayingMessageId(null);
+      }
+
       setVoiceModalMode('recording');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -625,15 +634,21 @@ const ChatComponent = () => {
             }),
           });
           const aiData = await res.json();
+          const botMessageId = 'bot-' + Date.now();
           setMessages((prev) => [
             ...prev,
             {
-              id: 'bot-' + Date.now(),
+              id: botMessageId,
               content: aiData.reply || 'Desculpe, não consegui responder agora.',
               user: 'bot',
               created_at: new Date().toISOString(),
             },
           ]);
+          
+          // Reproduz automaticamente o áudio da resposta do bot
+          if (aiData.reply) {
+            await playTTS(aiData.reply, botMessageId);
+          }
         } catch (err) {
           setMessages((prev) => [
             ...prev,
@@ -647,6 +662,9 @@ const ChatComponent = () => {
           setVoiceModalMode('ready-to-record');
         } finally {
           setLoading(false);
+          // Reabre o modal após enviar a mensagem
+          setVoiceModalOpen(true);
+          setVoiceModalMode('ready-to-record');
         }
       } else {
         setVoiceModalMode('ready-to-record');
