@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FaRobot, FaUserCircle, FaRegThumbsUp, FaRegThumbsDown, FaRegCommentDots, FaVolumeUp, FaPaperPlane, FaRegSmile, FaMicrophone, FaPause, FaPlay } from 'react-icons/fa';
 import { useTheme } from '../providers/ThemeProvider';
 import { useLanguage } from '../../lib/LanguageContext';
-import { useTranslation, Language, languageNames, translations } from '../../lib/i18n';
+import { useTranslation, Language, languageNames, translations, detectMessageLanguage } from '../../lib/i18n';
 import TypewriterEffect from '../../components/TypewriterEffect';
 import CommentModal from '../../components/CommentModal';
 import VoiceModal from '../../components/VoiceModal';
@@ -211,7 +211,7 @@ const ChatComponent = () => {
     }
   };
 
-  const playTTS = async (text: string, messageId: string, onEnd?: () => void) => {
+  const playTTS = async (text: string, messageId: string, onEnd?: () => void, forcedLanguage?: Language) => {
     if (typeof window === 'undefined') return;
     
     const loadingToast = showToast.loading('Carregando áudio...');
@@ -221,10 +221,17 @@ const ChatComponent = () => {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
       }
+
+      // Usa o idioma forçado ou detecta o idioma do texto
+      const detectedLanguage = forcedLanguage || detectMessageLanguage(text);
+      
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ 
+          text,
+          language: detectedLanguage 
+        }),
       });
       if (!res.ok) throw new Error('TTS failed');
       const audioBlob = await res.blob();
@@ -319,6 +326,9 @@ const ChatComponent = () => {
     // Detecta informações de contato na mensagem
     const { email, phone } = detectContactInfo(newMessage);
     
+    // Detecta o idioma da mensagem do usuário
+    const detectedLanguage = detectMessageLanguage(newMessage);
+    
     const userMsg: Message = {
       id: 'user-' + Date.now(),
       content: newMessage,
@@ -340,7 +350,7 @@ const ChatComponent = () => {
       content: msg.content
     }));
 
-    const prompt = `${newMessage}\n\nPlease answer ONLY in ${languageNames[language as Language] || 'English'}, regardless of the language of the question. Do not mention language or your ability to assist in other languages. Keep your answer short and concise.`;
+    const prompt = `${newMessage}\n\nPlease answer ONLY in ${languageNames[detectedLanguage]}, regardless of the language of the question. Do not mention language or your ability to assist in other languages. Keep your answer short and concise.`;
     try {
       const res = await fetch('/api/chatgpt', {
         method: 'POST',
@@ -474,6 +484,15 @@ const ChatComponent = () => {
     console.log('startRecording called');
     if (typeof window === 'undefined') return;
     try {
+      // Para o áudio atual se estiver tocando
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        setIsAudioPlaying(false);
+        setIsAudioPaused(false);
+        setCurrentPlayingMessageId(null);
+      }
+
       setVoiceModalMode('recording');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -598,6 +617,9 @@ const ChatComponent = () => {
       const data = await res.json();
       console.log('Transcription result:', data);
       if (data.text) {
+        // Usa o idioma detectado pela API de transcrição
+        const detectedLanguage = (data.language as Language) || detectMessageLanguage(data.text);
+        
         const userMsg = {
           id: 'user-' + Date.now(),
           content: data.text,
@@ -613,24 +635,33 @@ const ChatComponent = () => {
             content: msg.content
           }));
 
+          // Garante que o prompt seja no mesmo idioma da mensagem
+          const prompt = `${data.text}\n\nIMPORTANT: Respond EXACTLY in the SAME LANGUAGE as this message. Do not translate or change the language. Keep your response short and concise.`;
+
           const res = await fetch('/api/chatgpt', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-              message: data.text,
+              message: prompt,
               conversationHistory 
             }),
           });
           const aiData = await res.json();
+          const botMessageId = 'bot-' + Date.now();
           setMessages((prev) => [
             ...prev,
             {
-              id: 'bot-' + Date.now(),
+              id: botMessageId,
               content: aiData.reply || 'Desculpe, não consegui responder agora.',
               user: 'bot',
               created_at: new Date().toISOString(),
             },
           ]);
+          
+          // Reproduz automaticamente o áudio da resposta do bot no mesmo idioma
+          if (aiData.reply) {
+            await playTTS(aiData.reply, botMessageId, undefined, detectedLanguage);
+          }
         } catch (err) {
           setMessages((prev) => [
             ...prev,
@@ -644,6 +675,9 @@ const ChatComponent = () => {
           setVoiceModalMode('ready-to-record');
         } finally {
           setLoading(false);
+          // Reabre o modal após enviar a mensagem
+          setVoiceModalOpen(true);
+          setVoiceModalMode('ready-to-record');
         }
       } else {
         setVoiceModalMode('ready-to-record');
@@ -741,7 +775,7 @@ const ChatComponent = () => {
                                   toggleAudioPlayback();
                                 } else {
                                   setTtsLoadingMsgId(msg.id);
-                                  await playTTS(msg.content, msg.id, () => setTtsLoadingMsgId(null));
+                                  await playTTS(msg.content, msg.id, () => setTtsLoadingMsgId(null), msg.user === 'bot' ? language as Language : undefined);
                                   setTtsLoadingMsgId(null);
                                 }
                               }}
