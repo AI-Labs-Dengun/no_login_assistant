@@ -211,7 +211,7 @@ const ChatComponent = () => {
     }
   };
 
-  const playTTS = async (text: string, messageId: string, onEnd?: () => void) => {
+  const playTTS = async (text: string, messageId: string, onEnd?: () => void, forcedLanguage?: Language) => {
     if (typeof window === 'undefined') return;
     
     const loadingToast = showToast.loading('Carregando áudio...');
@@ -221,10 +221,17 @@ const ChatComponent = () => {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
       }
+
+      // Usa o idioma forçado ou detecta o idioma do texto
+      const detectedLanguage = forcedLanguage || detectMessageLanguage(text);
+      
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ 
+          text,
+          language: detectedLanguage 
+        }),
       });
       if (!res.ok) throw new Error('TTS failed');
       const audioBlob = await res.blob();
@@ -610,6 +617,9 @@ const ChatComponent = () => {
       const data = await res.json();
       console.log('Transcription result:', data);
       if (data.text) {
+        // Usa o idioma detectado pela API de transcrição
+        const detectedLanguage = (data.language as Language) || detectMessageLanguage(data.text);
+        
         const userMsg = {
           id: 'user-' + Date.now(),
           content: data.text,
@@ -625,11 +635,14 @@ const ChatComponent = () => {
             content: msg.content
           }));
 
+          // Garante que o prompt seja no mesmo idioma da mensagem
+          const prompt = `${data.text}\n\nIMPORTANT: Respond EXACTLY in the SAME LANGUAGE as this message. Do not translate or change the language. Keep your response short and concise.`;
+
           const res = await fetch('/api/chatgpt', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-              message: data.text,
+              message: prompt,
               conversationHistory 
             }),
           });
@@ -645,9 +658,9 @@ const ChatComponent = () => {
             },
           ]);
           
-          // Reproduz automaticamente o áudio da resposta do bot
+          // Reproduz automaticamente o áudio da resposta do bot no mesmo idioma
           if (aiData.reply) {
-            await playTTS(aiData.reply, botMessageId);
+            await playTTS(aiData.reply, botMessageId, undefined, detectedLanguage);
           }
         } catch (err) {
           setMessages((prev) => [
@@ -762,7 +775,7 @@ const ChatComponent = () => {
                                   toggleAudioPlayback();
                                 } else {
                                   setTtsLoadingMsgId(msg.id);
-                                  await playTTS(msg.content, msg.id, () => setTtsLoadingMsgId(null));
+                                  await playTTS(msg.content, msg.id, () => setTtsLoadingMsgId(null), msg.user === 'bot' ? language as Language : undefined);
                                   setTtsLoadingMsgId(null);
                                 }
                               }}
