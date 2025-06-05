@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FaRobot, FaUserCircle, FaRegThumbsUp, FaRegThumbsDown, FaRegCommentDots, FaVolumeUp, FaPaperPlane, FaRegSmile, FaMicrophone, FaPause, FaPlay } from 'react-icons/fa';
 import { useTheme } from '../providers/ThemeProvider';
 import { useLanguage } from '../../lib/LanguageContext';
-import { useTranslation, Language, languageNames, translations } from '../../lib/i18n';
+import { useTranslation, Language, languageNames, translations, detectMessageLanguage } from '../../lib/i18n';
 import TypewriterEffect from '../../components/TypewriterEffect';
 import CommentModal from '../../components/CommentModal';
 import VoiceModal from '../../components/VoiceModal';
@@ -319,6 +319,9 @@ const ChatComponent = () => {
     // Detecta informações de contato na mensagem
     const { email, phone } = detectContactInfo(newMessage);
     
+    // Detecta o idioma da mensagem do usuário
+    const detectedLanguage = detectMessageLanguage(newMessage);
+    
     const userMsg: Message = {
       id: 'user-' + Date.now(),
       content: newMessage,
@@ -340,7 +343,7 @@ const ChatComponent = () => {
       content: msg.content
     }));
 
-    const prompt = `${newMessage}\n\nPlease answer ONLY in ${languageNames[language as Language] || 'English'}, regardless of the language of the question. Do not mention language or your ability to assist in other languages. Keep your answer short and concise.`;
+    const prompt = `${newMessage}\n\nPlease answer ONLY in ${languageNames[detectedLanguage]}, regardless of the language of the question. Do not mention language or your ability to assist in other languages. Keep your answer short and concise.`;
     try {
       const res = await fetch('/api/chatgpt', {
         method: 'POST',

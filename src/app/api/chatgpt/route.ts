@@ -14,6 +14,7 @@ type ChatMessage = {
 
 export async function POST(req: Request) {
   try {
+    // 2. Processamento da requisição
     const { message, conversationHistory } = await req.json();
 
     // Read instructions and knowledge from public directory
@@ -30,7 +31,6 @@ ${instructions}
 ${knowledge}
 
 IMPORTANTE:
-- Responda sempre em português
 - Seja criativo e original em suas respostas
 - Use o tom e estilo definidos nas instruções
 - Incorpore informações relevantes da base de conhecimento
