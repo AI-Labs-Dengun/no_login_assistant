@@ -346,11 +346,14 @@ const ChatComponent = () => {
       await sendEmailWithConversation(email, phone);
     }
 
-    // Prepara o histórico da conversa para enviar ao ChatGPT
-    const conversationHistory = messages.map(msg => ({
-      user: msg.user,
-      content: msg.content
-    }));
+    // Prepara o histórico da conversa para enviar ao ChatGPT (inclui a mensagem atual do usuário)
+    const conversationHistory = [
+      ...messages.map(msg => ({
+        user: msg.user,
+        content: msg.content
+      })),
+      { user: 'me', content: newMessage }
+    ];
 
     const prompt = `${newMessage}\n\nIMPORTANT: Respond EXACTLY in the SAME LANGUAGE as this message. Do not translate or change the language. Keep your response short and concise.`;
     try {
@@ -569,6 +572,7 @@ const ChatComponent = () => {
 
   const handleTooltipClick = async (tooltip: string) => {
     handleFirstInteraction();
+    setIsTyping(true);
     const userMsg: Message = {
       id: 'user-' + Date.now(),
       content: tooltip,
@@ -594,6 +598,7 @@ const ChatComponent = () => {
           created_at: new Date().toISOString(),
         },
       ]);
+      setIsTyping(false);
     } catch (err) {
       setMessages((prev) => [
         ...prev,
@@ -604,6 +609,7 @@ const ChatComponent = () => {
           created_at: new Date().toISOString(),
         },
       ]);
+      setIsTyping(false);
     } finally {
       setLoading(false);
     }
@@ -633,11 +639,14 @@ const ChatComponent = () => {
         setMessages((prev) => [...prev, userMsg]);
         setLoading(true);
         try {
-          // Prepara o histórico da conversa para enviar ao ChatGPT
-          const conversationHistory = messages.map(msg => ({
-            user: msg.user,
-            content: msg.content
-          }));
+          // Prepara o histórico da conversa para enviar ao ChatGPT (inclui a mensagem transcrita)
+          const conversationHistory = [
+            ...messages.map(msg => ({
+              user: msg.user,
+              content: msg.content
+            })),
+            { user: 'me', content: data.text }
+          ];
 
           // Garante que o prompt seja no mesmo idioma da mensagem
           const prompt = `${data.text}\n\nIMPORTANT: Respond EXACTLY in the SAME LANGUAGE as this message. Do not translate or change the language. Keep your response short and concise.`;
