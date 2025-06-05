@@ -13,6 +13,7 @@ import dynamic from 'next/dynamic';
 import data from '@emoji-mart/data';
 import { Toaster } from 'react-hot-toast';
 import showToast from '../../lib/toast';
+import TypingIndicator from '../../components/TypingIndicator';
 
 const EmojiPicker = dynamic(() => import('@emoji-mart/react').then(mod => mod.default), {
   ssr: false,
@@ -62,7 +63,7 @@ const ChatComponent = () => {
   const [isAudioPaused, setIsAudioPaused] = useState(false);
   const [currentPlayingMessageId, setCurrentPlayingMessageId] = useState<string | null>(null);
   const voiceModalRef = useRef<HTMLDivElement>(null);
-
+  const [isTyping, setIsTyping] = useState(false);
 
   const handleScroll = () => {
     const el = chatContainerRef.current;
@@ -338,6 +339,7 @@ const ChatComponent = () => {
     setMessages((prev) => [...prev, userMsg]);
     setNewMessage('');
     setLoading(true);
+    setIsTyping(true);
 
     // Se detectou email ou telefone, envia o email
     if (email || phone) {
@@ -350,7 +352,7 @@ const ChatComponent = () => {
       content: msg.content
     }));
 
-    const prompt = `${newMessage}\n\nPlease answer ONLY in ${languageNames[detectedLanguage]}, regardless of the language of the question. Do not mention language or your ability to assist in other languages. Keep your answer short and concise.`;
+    const prompt = `${newMessage}\n\nIMPORTANT: Respond EXACTLY in the SAME LANGUAGE as this message. Do not translate or change the language. Keep your response short and concise.`;
     try {
       const res = await fetch('/api/chatgpt', {
         method: 'POST',
@@ -361,6 +363,7 @@ const ChatComponent = () => {
         }),
       });
       const data = await res.json();
+      setIsTyping(false);
       setMessages((prev) => [
         ...prev,
         {
@@ -371,6 +374,7 @@ const ChatComponent = () => {
         },
       ]);
     } catch (err) {
+      setIsTyping(false);
       setMessages((prev) => [
         ...prev,
         {
@@ -737,8 +741,6 @@ const ChatComponent = () => {
                   <div
                     className={`rounded-xl p-4 border-[0.5px] border-white text-white bg-transparent max-w-[90%] md:max-w-[90%] min-w-[100px] text-base relative ${msg.user === 'me' ? 'ml-2' : 'mr-2'}`}
                   >
-
-                    {/* typing effect for bot messages */}
                     <div className="flex items-center gap-2 mb-4">
                       {msg.user === 'bot' ? (
                         <TypewriterEffect
@@ -767,7 +769,6 @@ const ChatComponent = () => {
                               <FaRegThumbsDown className="text-lg" />
                             </button>
 
-                            {/* Audio button for bot messages */}
                             <button
                               className={`hover:text-blue-300 transition-colors`}
                               onClick={async () => {
@@ -805,6 +806,16 @@ const ChatComponent = () => {
                   )}
                 </div>
               ))}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="flex flex-col items-end mr-2 justify-center">
+                    <FaRobot className="text-3xl text-white" />
+                  </div>
+                  <div className="rounded-xl p-4 border-[0.5px] border-white text-white bg-transparent max-w-[90%] md:max-w-[90%] min-w-[100px] text-base relative mr-2">
+                    <TypingIndicator />
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
           )}

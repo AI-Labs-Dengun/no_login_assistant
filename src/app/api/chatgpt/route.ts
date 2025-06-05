@@ -32,14 +32,18 @@ export async function POST(req: Request) {
     [KNOWLEDGE BASE]
     ${knowledge}
 
-    IMPORTANT:
-    - ALWAYS respond in the SAME LANGUAGE as the user's message
-    - If the user writes in Portuguese, respond in Portuguese
-    - If the user writes in Spanish, respond in Spanish
-    - If the user writes in French, respond in French
-    - If the user writes in German, respond in German
-    - If the user writes in English, respond in English
-    - Never translate or change the language of your response
+    CRITICAL LANGUAGE INSTRUCTIONS:
+    - You MUST ALWAYS respond in the EXACT SAME LANGUAGE as the user's message
+    - If the user writes in Portuguese, you MUST respond in Portuguese
+    - If the user writes in Spanish, you MUST respond in Spanish
+    - If the user writes in French, you MUST respond in French
+    - If the user writes in German, you MUST respond in German
+    - If the user writes in English, you MUST respond in English
+    - NEVER translate or change the language of your response
+    - NEVER mention language or your ability to assist in other languages
+    - NEVER start your response with language-related phrases
+
+    ADDITIONAL GUIDELINES:
     - Be creative and original in your responses
     - Use the tone and style defined in the instructions
     - Incorporate relevant information from the knowledge base
