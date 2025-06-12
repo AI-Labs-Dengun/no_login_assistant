@@ -26,11 +26,8 @@ const VoiceModal: React.FC<VoiceModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-      <div 
-        ref={modalRef}
-        className="bg-auth-gradient bg-opacity-95 border border-white/30 rounded-3xl p-8 w-full max-w-md backdrop-blur-md relative shadow-2xl animate-scaleIn"
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-[#f8f9fa] dark:bg-[#1a1a2e] bg-opacity-95 border border-white/30 rounded-3xl p-8 w-full max-w-md backdrop-blur-md relative shadow-2xl animate-scaleIn">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"

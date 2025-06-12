@@ -7,7 +7,7 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
+  --background: #f8f9fa;
   --foreground: #171717;
 }
 
@@ -20,29 +20,29 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #1a1a2e;
     --foreground: #ededed;
   }
 }
 
 @layer base {
   body {
-    @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-white;
+    @apply bg-light-bg dark:bg-dark-bg text-gray-900 dark:text-white;
   }
 }
 
 @layer components {
   .bg-auth-gradient {
-    @apply bg-gradient-to-r from-purple-600 via-purple-800 to-blue-900;
+    @apply bg-[#f8f9fa] dark:bg-[#1a1a2e];
   }
 
   .auth-card {
-    @apply bg-white/70 dark:bg-gray-800/70 rounded-lg shadow-lg p-6;
+    @apply bg-white/70 dark:bg-dark-card/70 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-white/20;
   }
 
   .auth-input {
     @apply w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 
-           bg-white dark:bg-gray-700 text-gray-900 dark:text-white 
+           bg-white dark:bg-dark-card text-gray-900 dark:text-white 
            focus:outline-none focus:ring-2 focus:ring-purple-500;
   }
 
@@ -59,12 +59,12 @@
 
 body {
   background: var(--background);
-  color: #23234a;
+  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
 
 html.dark {
-  --background: #0a0a23;
+  --background: #1a1a2e;
   --foreground: #ededed;
 }
 
@@ -73,13 +73,13 @@ html.dark .bg-auth-gradient {
 }
 
 html.dark .auth-card {
-  background: rgba(20, 20, 40, 0.7);
+  background: rgba(35, 35, 74, 0.7);
 }
 
 html.dark .auth-input {
-  background: transparent;
+  background: #23234a;
   color: #ededed;
-  border-color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 html.dark .auth-button {
@@ -179,16 +179,21 @@ html.dark input::placeholder, html.dark textarea::placeholder {
 
 /* Dark mode custom scrollbar */
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #541d85 0%, #1c2458 100%);
+  @apply bg-gray-700;
 }
+
 .dark .custom-scrollbar {
-  scrollbar-color: #541d85 #0000;
+  scrollbar-color: #374151 #0000;
 }
 
 input:focus, textarea:focus {
-  border-color: #fff !important;
+  border-color: #000 !important;
   outline: none !important;
   box-shadow: none !important;
+}
+
+.dark input:focus, .dark textarea:focus {
+  border-color: #fff !important;
 }
 
 @keyframes voice-wave1 {

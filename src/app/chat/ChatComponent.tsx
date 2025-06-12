@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaRobot, FaUserCircle, FaRegThumbsUp, FaRegThumbsDown, FaRegCommentDots, FaVolumeUp, FaPaperPlane, FaRegSmile, FaMicrophone, FaPause, FaPlay } from 'react-icons/fa';
+import { FaRobot, FaUserCircle, FaRegThumbsUp, FaRegThumbsDown, FaRegCommentDots, FaVolumeUp, FaPaperPlane, FaRegSmile, FaMicrophone, FaPause, FaPlay, FaWhatsapp } from 'react-icons/fa';
 import { useTheme } from '../providers/ThemeProvider';
 import { useLanguage } from '../../lib/LanguageContext';
 import { useTranslation, Language, languageNames, translations, detectMessageLanguage } from '../../lib/i18n';
@@ -702,29 +702,40 @@ const ChatComponent = () => {
   };
 
   return (
-    <div className="bg-auth-gradient min-h-screen flex items-center justify-center">
+    <div className="bg-[#f8f9fa] dark:bg-[#1a1a2e] min-h-screen flex items-center justify-center">
       <Toaster position="bottom-right" />
-      <div className="w-full h-screen md:h-[90vh] md:max-w-2xl flex flex-col rounded-none md:rounded-3xl shadow-2xl border border-white/30">
-        <header className="p-4 md:p-4 flex justify-between items-center relative border-b border-white/20">
-          <h1 className="text-2xl font-bold text-white drop-shadow">{t('chat.assistantTitle') || 'Assistente IA'}</h1>
+      <div className="w-full h-screen md:h-[90vh] md:max-w-2xl flex flex-col rounded-none md:rounded-3xl shadow-2xl border border-gray-200 dark:border-white/30">
+        <header className="p-4 md:p-4 flex justify-between items-center relative border-b border-gray-200 dark:border-white/20">
           <div className="flex items-center gap-4">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full bg-white/30 hover:bg-white/50 text-gray-800 dark:text-white focus:outline-none"
-              aria-label={dark ? t('settings.lightMode') : t('settings.darkMode')}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              title={dark ? 'Mudar para modo claro' : 'Mudar para modo escuro'}
             >
               {dark ? (
-                <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' strokeWidth={1.5} stroke='currentColor' className='w-5 h-5 text-yellow-400'>
-                  <path strokeLinecap='round' strokeLinejoin='round' d='M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M6.05 17.95l-1.414 1.414m12.728 0l-1.414-1.414M6.05 6.05L4.636 4.636' />
-                  <circle cx='12' cy='12' r='5' fill='currentColor' />
+                <svg className="w-5 h-5 text-gray-900 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 </svg>
               ) : (
-                <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' strokeWidth={1.5} stroke='currentColor' className='w-5 h-5 text-gray-700 dark:text-white'>
-                  <path strokeLinecap='round' strokeLinejoin='round' d='M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z' />
+                <svg className="w-5 h-5 text-gray-900 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
               )}
             </button>
           </div>
+          <a
+            href="https://wa.me/351912345678"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-green-500 dark:hover:text-green-500 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              </svg>
+            </div>
+            <span className="hidden md:inline text-sm">+351 912 345 678</span>
+          </a>
         </header>
         <main
           ref={chatContainerRef}
@@ -744,11 +755,11 @@ const ChatComponent = () => {
                 >
                   {msg.user === 'bot' && (
                     <div className="flex flex-col items-end mr-2 justify-center">
-                      <FaRobot className="text-3xl text-white" />
+                      <FaRobot className="text-3xl text-gray-900 dark:text-white" />
                     </div>
                   )}
                   <div
-                    className={`rounded-xl p-4 border-[0.5px] border-white text-white bg-transparent max-w-[90%] md:max-w-[90%] min-w-[100px] text-base relative ${msg.user === 'me' ? 'ml-2' : 'mr-2'}`}
+                    className={`rounded-xl p-4 border-[0.5px] border-gray-200 dark:border-white text-gray-900 dark:text-white bg-transparent max-w-[90%] md:max-w-[90%] min-w-[100px] text-base relative ${msg.user === 'me' ? 'ml-2' : 'mr-2'}`}
                   >
                     <div className="flex items-center gap-2 mb-4">
                       {msg.user === 'bot' ? (
@@ -766,20 +777,20 @@ const ChatComponent = () => {
                         {msg.user === 'bot' && (
                           <>
                             <button
-                              className={`transition-colors ${feedback[msg.id] === 'like' ? 'text-green-400' : 'text-white'} hover:text-green-400`}
+                              className={`transition-colors ${feedback[msg.id] === 'like' ? 'text-green-400' : 'text-gray-900 dark:text-white'} hover:text-green-400`}
                               onClick={() => handleFeedback(msg.id, 'like', msg.content)}
                             >
                               <FaRegThumbsUp className="text-lg" />
                             </button>
                             <button
-                              className={`transition-colors ${feedback[msg.id] === 'dislike' ? 'text-red-400' : 'text-white'} hover:text-red-400`}
+                              className={`transition-colors ${feedback[msg.id] === 'dislike' ? 'text-red-400' : 'text-gray-900 dark:text-white'} hover:text-red-400`}
                               onClick={() => handleFeedback(msg.id, 'dislike', msg.content)}
                             >
                               <FaRegThumbsDown className="text-lg" />
                             </button>
 
                             <button
-                              className={`hover:text-blue-300 transition-colors`}
+                              className={`hover:text-gray-300 transition-colors`}
                               onClick={async () => {
                                 if (currentPlayingMessageId === msg.id) {
                                   toggleAudioPlayback();
@@ -794,14 +805,16 @@ const ChatComponent = () => {
                               {ttsLoadingMsgId === msg.id ? (
                                 <span className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500 inline-block"></span>
                               ) : currentPlayingMessageId === msg.id && isAudioPaused ? (
-                                <FaPlay className="text-lg text-white" />
+                                <FaPlay className="text-lg text-gray-900 dark:text-white" />
                               ) : currentPlayingMessageId === msg.id && isAudioPlaying ? (
-                                <FaPause className="text-lg text-white" />
+                                <FaPause className="text-lg text-gray-900 dark:text-white" />
                               ) : (
-                                <FaVolumeUp className="text-lg text-white" />
+                                <FaVolumeUp className="text-lg text-gray-900 dark:text-white" />
                               )}
                             </button>
-                            <button className="hover:text-blue-300 transition-colors" onClick={() => setCommentModal({ open: true, message: { id: msg.id, content: msg.content } })}><FaRegCommentDots className="text-lg text-white" /></button>
+                            <button className="hover:text-gray-300 transition-colors" onClick={() => setCommentModal({ open: true, message: { id: msg.id, content: msg.content } })}>
+                              <FaRegCommentDots className="text-lg text-gray-900 dark:text-white" />
+                            </button>
                           </>
                         )}
                       </div>
@@ -810,7 +823,7 @@ const ChatComponent = () => {
                   </div>
                   {msg.user === 'me' && (
                     <div className="flex flex-col items-end ml-2 justify-center">
-                      <FaUserCircle className="text-3xl text-white" />
+                      <FaUserCircle className="text-3xl text-gray-900 dark:text-white" />
                     </div>
                   )}
                 </div>
@@ -818,9 +831,9 @@ const ChatComponent = () => {
               {isTyping && (
                 <div className="flex justify-start">
                   <div className="flex flex-col items-end mr-2 justify-center">
-                    <FaRobot className="text-3xl text-white" />
+                    <FaRobot className="text-3xl text-gray-900 dark:text-white" />
                   </div>
-                  <div className="rounded-xl p-4 border-[0.5px] border-white text-white bg-transparent max-w-[90%] md:max-w-[90%] min-w-[100px] text-base relative mr-2">
+                  <div className="rounded-xl p-4 border-[0.5px] border-gray-200 dark:border-white text-gray-900 dark:text-white bg-transparent max-w-[90%] md:max-w-[90%] min-w-[100px] text-base relative mr-2">
                     <TypingIndicator />
                   </div>
                 </div>
@@ -833,10 +846,10 @@ const ChatComponent = () => {
         {/* Sugestões */}
         {tooltips.length > 0 && !hasUserInteracted && (
           <div className="w-full px-6">
-            <div className="w-full border-t border-white/30 mb-4" />
+            <div className="w-full border-t border-gray-200 dark:border-white/30 mb-4" />
             <div className="flex flex-col gap-2 mb-4 items-center w-full md:hidden">
               <button
-                className="w-full flex-1 px-4 py-2 rounded-lg bg-white/20 text-white/90 hover:bg-blue-400/80 transition-colors text-center"
+                className="w-full flex-1 px-4 py-2 rounded-lg bg-gray-200 dark:bg-white/20 text-gray-900 dark:text-white/90 hover:bg-gray-300 transition-colors text-center"
                 onClick={() => {
                   console.log('Botão de sugestões clicado');
                   setShowTooltipsModal(true);
@@ -850,7 +863,7 @@ const ChatComponent = () => {
                 {tooltips.slice(0, 2).map((tip, idx) => (
                   <button
                     key={idx}
-                    className="flex-1 text-sm px-4 py-2 rounded-lg bg-white/20 text-white/90 hover:bg-blue-400/80 transition-colors"
+                    className="flex-1 text-sm px-4 py-2 rounded-lg bg-gray-200 text-gray-900 hover:bg-gray-300 transition-colors"
                     onClick={() => handleTooltipClick(tip)}
                   >
                     {tip}
@@ -861,7 +874,7 @@ const ChatComponent = () => {
                 {tooltips.slice(2, 4).map((tip, idx) => (
                   <button
                     key={idx+2}
-                    className="flex-1 text-sm px-4 py-2 rounded-lg bg-white/20 text-white/90 hover:bg-blue-400/80 transition-colors"
+                    className="flex-1 text-sm px-4 py-2 rounded-lg bg-gray-200 text-gray-900 hover:bg-gray-300 transition-colors"
                     onClick={() => handleTooltipClick(tip)}
                   >
                     {tip}
@@ -879,9 +892,9 @@ const ChatComponent = () => {
                   }
                 }}
               >
-                <div className="bg-auth-gradient bg-opacity-90 rounded-2xl shadow-2xl p-6 max-w-xs w-full flex flex-col items-center border border-white/30 backdrop-blur-md relative">
+                <div className="bg-gray-200 dark:bg-white/20 rounded-2xl shadow-2xl p-6 max-w-xs w-full flex flex-col items-center border border-gray-200 dark:border-white/30 backdrop-blur-md relative">
                   <button
-                    className="absolute top-4 right-4 text-white/80 hover:text-white text-2xl"
+                    className="absolute top-4 right-4 text-gray-900 dark:text-white text-2xl"
                     onClick={() => {
                       console.log('Botão de fechar modal clicado');
                       setShowTooltipsModal(false);
@@ -891,12 +904,12 @@ const ChatComponent = () => {
                   >
                     &times;
                   </button>
-                  <h2 className="text-lg font-bold text-white mb-4 drop-shadow">{t('chat.suggestions')}</h2>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 drop-shadow">{t('chat.suggestions')}</h2>
                   <div className="flex flex-col gap-3 w-full">
                     {tooltips.map((tip, idx) => (
                       <button
                         key={idx}
-                        className="w-full px-4 py-2 rounded-lg bg-white/20 text-white/90 hover:bg-blue-400/80 transition-colors text-center"
+                        className="w-full px-4 py-2 rounded-lg bg-gray-200 text-gray-900 hover:bg-gray-300 transition-colors text-center"
                         onClick={() => { 
                           console.log('Sugestão clicada:', tip);
                           handleTooltipClick(tip); 
@@ -914,13 +927,13 @@ const ChatComponent = () => {
         <footer className="w-full p-3">
           <form
             onSubmit={handleSendMessage}
-            className="flex items-center gap-3 bg-transparent rounded-2xl px-4 py-2 shadow-md border border-white/30 relative"
+            className="flex items-center gap-3 bg-transparent rounded-2xl px-4 py-2 shadow-md border border-gray-200 dark:border-white/30 relative"
           >
             <div className="flex items-center w-full">
               <button
                 ref={emojiButtonRef}
                 type="button"
-                className={`hidden md:inline-flex text-xl text-white hover:text-gray-200 mr-2 ${isEmojiButtonActive ? 'text-blue-400' : ''}`}
+                className={`hidden md:inline-flex text-xl text-gray-900 dark:text-white hover:text-gray-200 mr-2 ${isEmojiButtonActive ? 'text-blue-400' : ''}`}
                 onClick={handleEmojiButtonClick}
                 tabIndex={-1}
               >
@@ -930,7 +943,7 @@ const ChatComponent = () => {
                 ref={inputRef}
                 type="text"
                 placeholder={t('chat.typeMessage')}
-                className="flex-1 bg-transparent outline-none px-2 py-2 text-white dark:text-white placeholder-gray-200 dark:placeholder-gray-300"
+                className="flex-1 bg-transparent outline-none px-2 py-2 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 disabled={loading}
@@ -938,14 +951,14 @@ const ChatComponent = () => {
               />
               <button
                 type="submit"
-                className="text-xl text-white hover:text-gray-200 disabled:opacity-50 ml-2"
+                className="text-xl text-gray-900 dark:text-white hover:text-gray-200 disabled:opacity-50 ml-2"
                 disabled={!newMessage.trim() || loading}
               >
                 <FaPaperPlane />
               </button>
               <button
                 type="button"
-                className="text-xl text-white hover:text-gray-200 ml-2"
+                className="text-xl text-gray-900 dark:text-white hover:text-gray-200 ml-2"
                 onClick={() => {
                   setVoiceModalOpen(true);
                   setVoiceModalMode('ready-to-record');
@@ -960,7 +973,7 @@ const ChatComponent = () => {
                 className="absolute bottom-12 left-0 z-50 emoji-picker-container"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="bg-white dark:bg-[#23234a] rounded-xl shadow-lg">
+                <div className="bg-gray-200 dark:bg-white/20 rounded-xl shadow-lg">
                   <EmojiPicker
                     data={data}
                     theme={dark ? 'dark' : 'light'}
@@ -977,7 +990,7 @@ const ChatComponent = () => {
           </form>
         </footer>
         <div className="w-full px-6 pb-2">
-          <p className="text-xs text-white/60 text-center">{t('chat.disclaimer')}</p>
+          <p className="text-xs text-gray-900 dark:text-white/60 text-center">{t('chat.disclaimer')}</p>
         </div>
       </div>
       <CommentModal

@@ -6,7 +6,20 @@ module.exports = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        light: {
+          bg: '#f8f9fa',
+          card: '#ffffff',
+          text: '#171717',
+        },
+        dark: {
+          bg: '#1a1a2e',
+          card: '#23234a',
+          text: '#ededed',
+        }
+      }
+    },
   },
   plugins: [
     require('tailwind-scrollbar')({ nocompatible: true }),

@@ -54,7 +54,7 @@ export default async function RootLayout({
           }
         `}} />
       </head>
-      <body className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+      <body className="min-h-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text">
         <LanguageProvider>
           <ThemeProvider>
             {children}
