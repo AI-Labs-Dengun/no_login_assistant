@@ -784,13 +784,23 @@ const ChatComponent = () => {
                   >
                     <div className="flex items-center gap-2 mb-4">
                       {msg.role === 'assistant' ? (
-                        <ReactMarkdown
-                          components={{
-                            p: ({ node, ...props }) => <span {...props} />,
+                        <div
+                          className="break-words whitespace-pre-line block w-full"
+                          style={{
+                            display: 'block',
+                            whiteSpace: 'pre-line',
+                            wordBreak: 'break-word',
+                            width: '100%',
                           }}
                         >
-                          {msg.content}
-                        </ReactMarkdown>
+                          <ReactMarkdown
+                            components={{
+                              p: ({ node, ...props }) => <span {...props} />,
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        </div>
                       ) : (
                         <span>{msg.content}</span>
                       )}
