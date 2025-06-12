@@ -23,8 +23,9 @@ const EmojiPicker = dynamic(() => import('@emoji-mart/react').then(mod => mod.de
 interface Message {
   id: string;
   content: string;
-  user: 'me' | 'bot';
+  role: 'user' | 'assistant';
   created_at: string;
+  audioUrl?: string;
 }
 
 const ChatComponent = () => {
@@ -46,7 +47,7 @@ const ChatComponent = () => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<BlobPart[]>([]);
-  const [voiceModalMode, setVoiceModalMode] = useState<'ai-speaking' | 'ready-to-record' | 'recording' | 'thinking' | 'loading'>('ai-speaking');
+  const [voiceModalMode, setVoiceModalMode] = useState<'ai-speaking' | 'ready-to-record' | 'recording' | 'thinking' | 'loading'>('ready-to-record');
   const [greetingLoading, setGreetingLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isNearBottom, setIsNearBottom] = useState(true);
@@ -65,6 +66,7 @@ const ChatComponent = () => {
   const voiceModalRef = useRef<HTMLDivElement>(null);
   const [isTyping, setIsTyping] = useState(false);
   const greetingLoadedRef = useRef(false);
+  const [currentAiMessage, setCurrentAiMessage] = useState<string>('');
 
   const handleScroll = () => {
     const el = chatContainerRef.current;
@@ -81,7 +83,7 @@ const ChatComponent = () => {
   }, [messages, isNearBottom]);
 
   React.useEffect(() => {
-    if (messages.length > 0 && messages[messages.length - 1].user === 'bot' && inputRef.current) {
+    if (messages.length > 0 && messages[messages.length - 1].role === 'assistant' && inputRef.current) {
       inputRef.current.focus();
     }
   }, [messages]);
@@ -117,7 +119,7 @@ const ChatComponent = () => {
             {
               id: 'welcome',
               content: greetingMsg,
-              user: 'bot',
+              role: 'assistant',
               created_at: new Date().toISOString(),
             },
           ]);
@@ -289,7 +291,7 @@ const ChatComponent = () => {
   const sendEmailWithConversation = async (email: string | null, phone: string | null) => {
     try {
       const conversation = messages.map(msg => 
-        `${msg.user === 'me' ? 'Cliente' : 'Assistente'}: ${msg.content}`
+        `${msg.role === 'user' ? 'Cliente' : 'Assistente'}: ${msg.content}`
       ).join('\n\n');
 
       const response = await fetch('/api/send-email', {
@@ -327,7 +329,7 @@ const ChatComponent = () => {
     const userMsg: Message = {
       id: 'user-' + Date.now(),
       content: newMessage,
-      user: 'me',
+      role: 'user',
       created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, userMsg]);
@@ -343,10 +345,10 @@ const ChatComponent = () => {
     // Prepara o histórico da conversa para enviar ao ChatGPT (inclui a mensagem atual do usuário)
     const conversationHistory = [
       ...messages.map(msg => ({
-        user: msg.user,
+        role: msg.role as 'user' | 'assistant',
         content: msg.content
       })),
-      { user: 'me', content: newMessage }
+      { role: 'user' as const, content: newMessage }
     ];
 
     const prompt = `${newMessage}\n\nIMPORTANT: Respond EXACTLY in the SAME LANGUAGE as this message. Do not translate or change the language. Keep your response short and concise.`;
@@ -366,7 +368,7 @@ const ChatComponent = () => {
         {
           id: 'bot-' + Date.now(),
           content: data.reply || t('chat.greeting'),
-          user: 'bot',
+          role: 'assistant',
           created_at: new Date().toISOString(),
         },
       ]);
@@ -377,7 +379,7 @@ const ChatComponent = () => {
         {
           id: 'bot-error-' + Date.now(),
           content: t('common.error'),
-          user: 'bot',
+          role: 'assistant',
           created_at: new Date().toISOString(),
         },
       ]);
@@ -483,11 +485,104 @@ const ChatComponent = () => {
     }
   };
 
+  const handleAudioSubmit = async (audioBlob: Blob) => {
+    if (greetingLoading) return;
+    setVoiceModalMode('thinking');
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'audio.wav');
+      const res = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      console.log('Transcription result:', data);
+      if (data.text) {
+        // Use the language detected by the transcription API
+        const detectedLanguage = (data.language as Language) || detectMessageLanguage(data.text);
+        
+        const userMsg: Message = {
+          id: 'user-' + Date.now(),
+          content: data.text,
+          role: 'user' as const,
+          created_at: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, userMsg]);
+        setLoading(true);
+        try {
+          // Prepare conversation history for ChatGPT (includes transcribed message)
+          const conversationHistory = [
+            ...messages.map(msg => ({
+              role: msg.role,
+              content: msg.content
+            })),
+            { role: 'user' as const, content: data.text }
+          ];
+
+          // Ensure prompt is in the same language as the message
+          const prompt = `${data.text}\n\nIMPORTANT: Respond EXACTLY in the SAME LANGUAGE as this message. Do not translate or change the language. Keep your response short and concise.`;
+
+          const res = await fetch('/api/chatgpt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              message: prompt,
+              conversationHistory 
+            }),
+          });
+          const aiData = await res.json();
+          const botMessageId = 'bot-' + Date.now();
+          const botMessage = {
+            id: botMessageId,
+            content: aiData.reply || 'Sorry, I could not respond now.',
+            role: 'assistant' as const,
+            created_at: new Date().toISOString(),
+          };
+          setMessages((prev) => [...prev, botMessage]);
+          
+          // Keep showing thinking screen while preparing TTS
+          setVoiceModalMode('thinking');
+          setVoiceModalOpen(true);
+          
+          // Automatically play the bot's response audio in the same language
+          if (aiData.reply) {
+            // Set AI speaking mode and message only when TTS is about to start
+            setCurrentAiMessage(botMessage.content);
+            await playTTS(aiData.reply, botMessageId, () => {
+              // After TTS finishes, set mode back to ready-to-record
+              setVoiceModalMode('ready-to-record');
+            }, detectedLanguage);
+            // Set AI speaking mode right before TTS starts
+            setVoiceModalMode('ai-speaking');
+          }
+        } catch (err) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: 'bot-error-' + Date.now(),
+              content: 'Error connecting to ChatGPT.',
+              role: 'assistant' as const,
+              created_at: new Date().toISOString(),
+            },
+          ]);
+          setVoiceModalMode('ready-to-record');
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setVoiceModalMode('ready-to-record');
+      }
+    } catch (err) {
+      console.error('Transcription error:', err);
+      setVoiceModalMode('ready-to-record');
+    }
+  };
+
   const startRecording = async () => {
     console.log('startRecording called');
     if (typeof window === 'undefined') return;
     try {
-      // Para o áudio atual se estiver tocando
+      // Stop any playing audio
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -533,7 +628,7 @@ const ChatComponent = () => {
 
   const handleVoiceModalClose = () => {
     setVoiceModalOpen(false);
-    setVoiceModalMode('ai-speaking');
+    setVoiceModalMode('ready-to-record');
     setVoiceMode('idle');
     if (audioRef.current) {
       audioRef.current.pause();
@@ -545,7 +640,7 @@ const ChatComponent = () => {
   };
 
   useEffect(() => {
-    if (messages.length > 0 && messages[messages.length - 1].user === 'bot') {
+    if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
       const typeSpeed = 20;
       const startDelay = 100;
       const msg = messages[messages.length - 1].content || '';
@@ -573,7 +668,7 @@ const ChatComponent = () => {
     const userMsg: Message = {
       id: 'user-' + Date.now(),
       content: tooltip,
-      user: 'me',
+      role: 'user',
       created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, userMsg]);
@@ -591,7 +686,7 @@ const ChatComponent = () => {
         {
           id: 'bot-' + Date.now(),
           content: data.reply || t('chat.greeting'),
-          user: 'bot',
+          role: 'assistant',
           created_at: new Date().toISOString(),
         },
       ]);
@@ -602,7 +697,7 @@ const ChatComponent = () => {
         {
           id: 'bot-error-' + Date.now(),
           content: t('common.error'),
-          user: 'bot',
+          role: 'assistant',
           created_at: new Date().toISOString(),
         },
       ]);
@@ -612,89 +707,16 @@ const ChatComponent = () => {
     }
   };
 
-  const handleAudioSubmit = async (audioBlob: Blob) => {
-    if (greetingLoading) return;
-    setVoiceModalMode('thinking');
-    try {
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'audio.wav');
-      const res = await fetch('/api/transcribe', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      console.log('Transcription result:', data);
-      if (data.text) {
-        // Usa o idioma detectado pela API de transcrição
-        const detectedLanguage = (data.language as Language) || detectMessageLanguage(data.text);
-        
-        const userMsg = {
-          id: 'user-' + Date.now(),
-          content: data.text,
-          user: 'me' as 'me',
-          created_at: new Date().toISOString(),
-        };
-        setMessages((prev) => [...prev, userMsg]);
-        setLoading(true);
-        try {
-          // Prepara o histórico da conversa para enviar ao ChatGPT (inclui a mensagem transcrita)
-          const conversationHistory = [
-            ...messages.map(msg => ({
-              user: msg.user,
-              content: msg.content
-            })),
-            { user: 'me', content: data.text }
-          ];
+  const handleVoiceMode = async (messageId: string) => {
+    const message = messages.find(m => m.id === messageId);
+    if (!message) return;
 
-          // Garante que o prompt seja no mesmo idioma da mensagem
-          const prompt = `${data.text}\n\nIMPORTANT: Respond EXACTLY in the SAME LANGUAGE as this message. Do not translate or change the language. Keep your response short and concise.`;
-
-          const res = await fetch('/api/chatgpt', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              message: prompt,
-              conversationHistory 
-            }),
-          });
-          const aiData = await res.json();
-          const botMessageId = 'bot-' + Date.now();
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: botMessageId,
-              content: aiData.reply || 'Desculpe, não consegui responder agora.',
-              user: 'bot',
-              created_at: new Date().toISOString(),
-            },
-          ]);
-          
-          // Reproduz automaticamente o áudio da resposta do bot no mesmo idioma
-          if (aiData.reply) {
-            await playTTS(aiData.reply, botMessageId, undefined, detectedLanguage);
-          }
-        } catch (err) {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: 'bot-error-' + Date.now(),
-              content: 'Erro ao conectar ao ChatGPT.',
-              user: 'bot',
-              created_at: new Date().toISOString(),
-            },
-          ]);
-          setVoiceModalMode('ready-to-record');
-        } finally {
-          setLoading(false);
-          // Reabre o modal após enviar a mensagem
-          setVoiceModalOpen(true);
-          setVoiceModalMode('ready-to-record');
-        }
-      } else {
-        setVoiceModalMode('ready-to-record');
-      }
-    } catch (err) {
-      console.error('Transcription error:', err);
+    if (message.role === 'assistant') {
+      setCurrentAiMessage(message.content);
+      setVoiceModalOpen(true);
+      setVoiceModalMode('ai-speaking');
+    } else {
+      setVoiceModalOpen(true);
       setVoiceModalMode('ready-to-record');
     }
   };
@@ -749,18 +771,18 @@ const ChatComponent = () => {
               {messages.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`flex ${msg.user === 'me' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  {msg.user === 'bot' && (
+                  {msg.role === 'assistant' && (
                     <div className="flex flex-col items-end mr-2 justify-center">
                       <FaRobot className="text-3xl text-gray-900 dark:text-white" />
                     </div>
                   )}
                   <div
-                    className={`rounded-xl p-4 border-[0.5px] border-gray-200 dark:border-white text-gray-900 dark:text-white bg-transparent max-w-[90%] md:max-w-[90%] min-w-[100px] text-base relative ${msg.user === 'me' ? 'ml-2' : 'mr-2'}`}
+                    className={`rounded-xl p-4 border-[0.5px] border-gray-200 dark:border-white text-gray-900 dark:text-white bg-transparent max-w-[90%] md:max-w-[90%] min-w-[100px] text-base relative ${msg.role === 'user' ? 'ml-2' : 'mr-2'}`}
                   >
                     <div className="flex items-center gap-2 mb-4">
-                      {msg.user === 'bot' ? (
+                      {msg.role === 'assistant' ? (
                         <TypewriterEffect
                           text={msg.content}
                           speed={20}
@@ -772,7 +794,7 @@ const ChatComponent = () => {
                     </div>
                     <div className="flex items-center gap-2 mt-5 pb-1 relative justify-between">
                       <div className="flex items-center gap-2">
-                        {msg.user === 'bot' && (
+                        {msg.role === 'assistant' && (
                           <>
                             <button
                               className={`transition-colors ${feedback[msg.id] === 'like' ? 'text-green-400' : 'text-gray-900 dark:text-white'} hover:text-green-400`}
@@ -794,7 +816,7 @@ const ChatComponent = () => {
                                   toggleAudioPlayback();
                                 } else {
                                   setTtsLoadingMsgId(msg.id);
-                                  await playTTS(msg.content, msg.id, () => setTtsLoadingMsgId(null), msg.user === 'bot' ? language as Language : undefined);
+                                  await playTTS(msg.content, msg.id, () => setTtsLoadingMsgId(null), msg.role === 'assistant' ? language as Language : undefined);
                                   setTtsLoadingMsgId(null);
                                 }
                               }}
@@ -819,7 +841,7 @@ const ChatComponent = () => {
                       <span className="text-xs opacity-60 whitespace-nowrap">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                   </div>
-                  {msg.user === 'me' && (
+                  {msg.role === 'user' && (
                     <div className="flex flex-col items-end ml-2 justify-center">
                       <FaUserCircle className="text-3xl text-gray-900 dark:text-white" />
                     </div>
@@ -1001,12 +1023,13 @@ const ChatComponent = () => {
         }}
       />
       <VoiceModal
-        isOpen={voiceModalOpen && (voiceModalMode === 'ready-to-record' || voiceModalMode === 'recording')}
+        isOpen={voiceModalOpen}
         onClose={handleVoiceModalClose}
         onSubmit={handleAudioSubmit}
         mode={voiceModalMode}
         onToggleRecord={handleToggleRecord}
         modalRef={voiceModalRef}
+        aiMessage={currentAiMessage}
       />
     </div>
   );
