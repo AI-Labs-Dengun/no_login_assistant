@@ -14,6 +14,8 @@ import data from '@emoji-mart/data';
 import { Toaster } from 'react-hot-toast';
 import showToast from '../../lib/toast';
 import TypingIndicator from '../../components/TypingIndicator';
+import { useTokenCounter, TokenCounter } from '../../components/TokenCounter';
+import { useInteractionCounter, InteractionCounter } from '../../components/InteractionCounter';
 
 const EmojiPicker = dynamic(() => import('@emoji-mart/react').then(mod => mod.default), {
   ssr: false,
@@ -67,6 +69,8 @@ const ChatComponent = () => {
   const [isTyping, setIsTyping] = useState(false);
   const greetingLoadedRef = useRef(false);
   const [currentAiMessage, setCurrentAiMessage] = useState<string>('');
+  const { addTokens, resetTokens } = useTokenCounter();
+  const { addInteraction, resetInteractions } = useInteractionCounter();
 
   const handleScroll = () => {
     const el = chatContainerRef.current;
@@ -94,6 +98,8 @@ const ChatComponent = () => {
     if (messages.length === 0 && !greetingLoading && !greetingLoadedRef.current) {
       setGreetingLoading(true);
       greetingLoadedRef.current = true;
+      resetTokens(); // Resetar o contador de tokens quando iniciar nova conversa
+      resetInteractions(); // Resetar o contador de interações quando iniciar nova conversa
       (async () => {
         let greetingMsg = null;
         try {
@@ -128,7 +134,7 @@ const ChatComponent = () => {
         }
       })();
     }
-  }, [language, messages.length, greetingLoading]);
+  }, [language, messages.length, greetingLoading, resetTokens, resetInteractions]);
 
   // Carregar sugestões
   useEffect(() => {
@@ -362,6 +368,15 @@ const ChatComponent = () => {
         }),
       });
       const data = await res.json();
+      
+      // Adicionar tokens ao contador
+      if (data.tokenCount) {
+        addTokens(data.tokenCount);
+      }
+
+      // Incrementar contador de interações
+      addInteraction();
+
       setIsTyping(false);
       setMessages((prev) => [
         ...prev,
@@ -531,6 +546,15 @@ const ChatComponent = () => {
             }),
           });
           const aiData = await res.json();
+          
+          // Adicionar tokens ao contador
+          if (aiData.tokenCount) {
+            addTokens(aiData.tokenCount);
+          }
+          
+          // Incrementar contador de interações
+          addInteraction();
+
           const botMessageId = 'bot-' + Date.now();
           const botMessage = {
             id: botMessageId,
@@ -681,6 +705,15 @@ const ChatComponent = () => {
         body: JSON.stringify({ message: prompt }),
       });
       const data = await res.json();
+      
+      // Adicionar tokens ao contador
+      if (data.tokenCount) {
+        addTokens(data.tokenCount);
+      }
+      
+      // Incrementar contador de interações
+      addInteraction();
+
       setMessages((prev) => [
         ...prev,
         {
@@ -1031,6 +1064,8 @@ const ChatComponent = () => {
         modalRef={voiceModalRef}
         aiMessage={currentAiMessage}
       />
+      <TokenCounter />
+      <InteractionCounter />
     </div>
   );
 };
