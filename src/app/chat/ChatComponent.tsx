@@ -14,6 +14,7 @@ import data from '@emoji-mart/data';
 import { Toaster } from 'react-hot-toast';
 import showToast from '../../lib/toast';
 import TypingIndicator from '../../components/TypingIndicator';
+import ReactMarkdown from 'react-markdown';
 
 const EmojiPicker = dynamic(() => import('@emoji-mart/react').then(mod => mod.default), {
   ssr: false,
@@ -783,11 +784,13 @@ const ChatComponent = () => {
                   >
                     <div className="flex items-center gap-2 mb-4">
                       {msg.role === 'assistant' ? (
-                        <TypewriterEffect
-                          text={msg.content}
-                          speed={20}
-                          delay={100}
-                        />
+                        <ReactMarkdown
+                          components={{
+                            p: ({ node, ...props }) => <span {...props} />,
+                          }}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
                       ) : (
                         <span>{msg.content}</span>
                       )}
