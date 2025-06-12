@@ -36,7 +36,7 @@ const VoiceModal: React.FC<VoiceModalProps> = ({
   const renderAISpeakingScreen = () => (
     <div className="flex flex-col items-center gap-8">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white text-center drop-shadow">
-        {language === 'pt' ? 'Assistente está falando' : 'Assistant is speaking'}
+        {t('voice.aiSpeakingTitle')}
       </h2>
 
       <div className="w-40 h-40 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center relative overflow-visible backdrop-blur-sm">
@@ -60,10 +60,10 @@ const VoiceModal: React.FC<VoiceModalProps> = ({
     <div className="flex flex-col items-center gap-8">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white text-center drop-shadow">
         {mode === 'thinking'
-          ? (language === 'pt' ? 'Carregando...' : 'Loading...')
+          ? t('voice.loadingTitle')
           : mode === 'recording'
-            ? (language === 'pt' ? 'Gravando sua mensagem...' : 'Recording your message...')
-            : (language === 'pt' ? 'Toque para começar a gravar' : 'Tap to start recording')}
+            ? t('voice.recordingTitle')
+            : t('voice.startPrompt')}
       </h2>
 
       <div className="w-40 h-40 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center relative overflow-visible backdrop-blur-sm">
@@ -93,15 +93,15 @@ const VoiceModal: React.FC<VoiceModalProps> = ({
           className={`px-8 py-3 rounded-xl bg-gray-200 dark:bg-white/20 text-gray-900 dark:text-white font-semibold hover:bg-gray-300 dark:hover:bg-white/30 transition-all duration-200 w-auto shadow-lg hover:shadow-xl hover:scale-105`}
         >
           {mode === 'recording' 
-            ? (language === 'pt' ? 'Parar gravação' : 'Stop recording')
-            : (language === 'pt' ? 'Iniciar gravação' : 'Start recording')}
+            ? t('voice.stopRecording')
+            : t('voice.startRecording')}
         </button>
       )}
 
       {mode === 'thinking' && (
         <div className="flex flex-col items-center gap-4">
           <div className="text-gray-900 dark:text-white/90 text-center text-lg font-medium">
-            {language === 'pt' ? 'Analisando sua mensagem...' : 'Analyzing your message...'}
+            {t('voice.analyzingMessage')}
           </div>
         </div>
       )}

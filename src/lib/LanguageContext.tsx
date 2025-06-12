@@ -24,28 +24,11 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     setMounted(true);
-    
-    const detectLanguage = () => {
-      // 1. Tenta obter o idioma salvo no localStorage
-      const savedLanguage = localStorage.getItem('language') as Language;
-      if (savedLanguage && ['pt', 'en', 'es', 'fr', 'de'].includes(savedLanguage)) {
-        return savedLanguage;
-      }
 
-      // 2. Tenta obter o idioma do navegador
-      const browserLang = getBrowserLanguage();
-      if (browserLang) {
-        return browserLang;
-      }
-
-      // 3. Fallback para inglês
-      return 'en';
-    };
-
-    const detectedLang = detectLanguage();
-    setLanguage(detectedLang);
-    localStorage.setItem('language', detectedLang);
-    document.documentElement.lang = detectedLang;
+    // Sempre detecta o idioma do navegador a cada carregamento
+    const browserLang = getBrowserLanguage();
+    setLanguage(browserLang);
+    document.documentElement.lang = browserLang;
   }, []);
 
   const handleSetLanguage = (newLang: Language) => {

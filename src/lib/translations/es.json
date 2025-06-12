@@ -112,6 +112,11 @@
     "stopRecording": "Detener Grabación",
     "recording": "Grabando...",
     "processing": "Procesando...",
-    "error": "Error al grabar audio"
+    "error": "Error al grabar audio",
+    "startPrompt": "Toca para empezar a grabar",
+    "recordingTitle": "Grabando tu mensaje...",
+    "loadingTitle": "Cargando...",
+    "aiSpeakingTitle": "El asistente está hablando",
+    "analyzingMessage": "Analizando tu mensaje..."
   }
 } 

@@ -113,6 +113,11 @@
     "stopRecording": "Aufnahme stoppen",
     "recording": "Aufnahme läuft...",
     "processing": "Wird verarbeitet...",
-    "error": "Fehler bei der Audioaufnahme"
+    "error": "Fehler bei der Audioaufnahme",
+    "startPrompt": "Tippen Sie, um die Aufnahme zu starten",
+    "recordingTitle": "Ihre Nachricht wird aufgenommen...",
+    "loadingTitle": "Wird geladen...",
+    "aiSpeakingTitle": "Assistent spricht",
+    "analyzingMessage": "Nachricht wird analysiert..."
   }
 } 

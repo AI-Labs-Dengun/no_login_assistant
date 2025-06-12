@@ -113,6 +113,11 @@
     "stopRecording": "Stop Recording",
     "recording": "Recording...",
     "processing": "Processing...",
-    "error": "Error recording audio"
+    "error": "Error recording audio",
+    "startPrompt": "Tap to start recording",
+    "recordingTitle": "Recording your message...",
+    "loadingTitle": "Loading...",
+    "aiSpeakingTitle": "Assistant is speaking",
+    "analyzingMessage": "Analyzing your message..."
   }
 } 

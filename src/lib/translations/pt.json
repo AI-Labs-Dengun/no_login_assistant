@@ -90,6 +90,11 @@
     "aiThinking": "IA a pensar...",
     "loading": "A carregar áudio...",
     "start": "Iniciar Gravação",
-    "stop": "Parar Gravação"
+    "stop": "Parar Gravação",
+    "startPrompt": "Toque para começar a gravar",
+    "recordingTitle": "A gravar a sua mensagem...",
+    "loadingTitle": "A carregar...",
+    "aiSpeakingTitle": "Assistente está a falar",
+    "analyzingMessage": "A analisar a sua mensagem..."
   }
 } 
