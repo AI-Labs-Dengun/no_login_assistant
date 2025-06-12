@@ -5,6 +5,8 @@ import { ThemeProvider } from "./providers/ThemeProvider";
 import { headers } from "next/headers";
 import { LanguageProvider } from '../lib/LanguageContext';
 import { Toaster } from 'react-hot-toast';
+import { TokenProvider } from '../components/TokenCounter';
+import { InteractionProvider } from '../components/InteractionCounter';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -55,12 +57,16 @@ export default async function RootLayout({
         `}} />
       </head>
       <body className="min-h-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text">
-        <LanguageProvider>
-          <ThemeProvider>
-            {children}
-            <Toaster />
-          </ThemeProvider>
-        </LanguageProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            <TokenProvider>
+              <InteractionProvider>
+                {children}
+                <Toaster />
+              </InteractionProvider>
+            </TokenProvider>
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
