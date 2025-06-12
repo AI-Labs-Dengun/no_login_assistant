@@ -729,7 +729,7 @@ const ChatComponent = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-800 transition-colors"
               title={dark ? 'Mudar para modo claro' : 'Mudar para modo escuro'}
             >
               {dark ? (
@@ -953,11 +953,11 @@ const ChatComponent = () => {
               <button
                 ref={emojiButtonRef}
                 type="button"
-                className={`hidden md:inline-flex text-xl text-gray-900 dark:text-white hover:text-gray-200 mr-2 ${isEmojiButtonActive ? 'text-blue-400' : ''}`}
+                className={`hidden md:inline-flex flex items-center justify-center relative overflow-hidden text-xl text-gray-900 dark:text-white hover:bg-gray-300 focus:bg-gray-300 dark:hover:bg-gray-800 dark:focus:bg-gray-800 mr-2 rounded-full p-2 transition-colors ${isEmojiButtonActive ? 'text-blue-400' : ''}`}
                 onClick={handleEmojiButtonClick}
                 tabIndex={-1}
               >
-                <FaRegSmile />
+                <FaRegSmile className="text-xl" />
               </button>
               <input
                 ref={inputRef}
@@ -971,14 +971,14 @@ const ChatComponent = () => {
               />
               <button
                 type="submit"
-                className="text-xl text-gray-900 dark:text-white hover:text-gray-200 disabled:opacity-50 ml-2"
+                className="flex items-center justify-center relative overflow-hidden text-xl text-gray-900 dark:text-white hover:bg-gray-300 focus:bg-gray-300 dark:hover:bg-gray-800 dark:focus:bg-gray-800 disabled:opacity-50 ml-2 rounded-full p-2 transition-colors"
                 disabled={!newMessage.trim() || loading}
               >
-                <FaPaperPlane />
+                <FaPaperPlane className="text-xl" />
               </button>
               <button
                 type="button"
-                className="text-xl text-gray-900 dark:text-white hover:text-gray-200 ml-2"
+                className="flex items-center justify-center relative overflow-hidden text-xl text-gray-900 dark:text-white hover:bg-gray-300 focus:bg-gray-300 dark:hover:bg-gray-800 dark:focus:bg-gray-800 ml-2 rounded-full p-2 transition-colors"
                 onClick={() => {
                   setVoiceModalOpen(true);
                   setVoiceModalMode('ready-to-record');
