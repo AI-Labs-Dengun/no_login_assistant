@@ -550,7 +550,7 @@ const ChatComponent = () => {
 
   useEffect(() => {
     if (messages.length > 0 && messages[messages.length - 1].user === 'bot') {
-      const typeSpeed = 50;
+      const typeSpeed = 20;
       const startDelay = 100;
       const msg = messages[messages.length - 1].content || '';
       setIsTypewriterActive(true);
@@ -754,7 +754,7 @@ const ChatComponent = () => {
                       {msg.user === 'bot' ? (
                         <TypewriterEffect
                           text={msg.content}
-                          speed={50}
+                          speed={20}
                           delay={100}
                         />
                       ) : (
