@@ -48,12 +48,16 @@ export const useBotUsage = () => {
       const result = await botUsageService.registerUsage(
         window.location.origin,
         botInfo.bot_id,
-        tokensUsed,
-        'chat'
+        tokensUsed
       );
 
       if (!result.success) {
         console.error('Erro ao registrar uso do bot:', result.error);
+        toast({
+          title: 'Erro',
+          description: 'Falha ao registrar uso do bot',
+          status: 'error',
+        });
         return;
       }
 
@@ -66,6 +70,11 @@ export const useBotUsage = () => {
 
     } catch (error) {
       console.error('Erro ao registrar uso do bot:', error);
+      toast({
+        title: 'Erro',
+        description: 'Falha ao registrar uso do bot',
+        status: 'error',
+      });
     }
   };
 
