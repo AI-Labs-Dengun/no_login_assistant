@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useTheme } from '../app/providers/ThemeProvider';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 
 interface InteractionContextType {
   interactionCount: number;
@@ -14,10 +14,6 @@ const InteractionContext = createContext<InteractionContextType | undefined>(und
 
 const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [interactionCount, setInteractionCount] = useState(0);
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-  );
 
   const addInteraction = async () => {
     const newCount = interactionCount + 1;

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useTheme } from '../app/providers/ThemeProvider';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 
 interface TokenContextType {
   tokenCount: number;
@@ -14,10 +14,6 @@ const TokenContext = createContext<TokenContextType | undefined>(undefined);
 
 const TokenProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [tokenCount, setTokenCount] = useState(0);
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-  );
 
   const addTokens = async (count: number) => {
     const newCount = tokenCount + count;
