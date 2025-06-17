@@ -78,6 +78,36 @@ export const db = {
         .single();
       if (error) throw error;
       return data;
+    },
+    async registerUsage({
+      website,
+      botId,
+      tokensUsed,
+      actionType = 'chat'
+    }: {
+      website: string;
+      botId: string;
+      tokensUsed: number;
+      actionType?: string;
+    }) {
+      try {
+        const { data, error } = await supabase.rpc('register_public_bot_usage', {
+          p_website: website,
+          p_bot_id: botId,
+          p_tokens_used: tokensUsed,
+          p_action_type: actionType
+        });
+
+        if (error) {
+          console.error('Erro ao registrar uso do bot:', error);
+          throw error;
+        }
+
+        return data;
+      } catch (error) {
+        console.error('Erro ao registrar uso do bot:', error);
+        throw error;
+      }
     }
   }
 }; 
