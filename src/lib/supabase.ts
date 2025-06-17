@@ -56,5 +56,28 @@ export const db = {
       if (error) throw error;
       return data;
     }
+  },
+
+  // Operações para client_bot_usage
+  clientBotUsage: {
+    async incrementUsage({ website, tokens = 0, interactions = 1 }: { website: string, tokens?: number, interactions?: number }) {
+      // Atualiza ou insere registro para o website
+      const { data, error } = await supabase.rpc('increment_client_bot_usage', {
+        website_param: website,
+        tokens_param: tokens,
+        interactions_param: interactions
+      });
+      if (error) throw error;
+      return data;
+    },
+    async getUsageByWebsite(website: string) {
+      const { data, error } = await supabase
+        .from('client_bot_usage')
+        .select('*')
+        .eq('website', website)
+        .single();
+      if (error) throw error;
+      return data;
+    }
   }
 }; 
