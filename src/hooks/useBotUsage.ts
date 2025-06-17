@@ -41,60 +41,31 @@ export const useBotUsage = () => {
     }
   };
 
-  const updateUsage = async (tokensUsed: number, interactions: number = 1): Promise<boolean> => {
-    if (!user?.id) {
-      toast({
-        title: 'Erro',
-        description: 'Usuário não autenticado',
-        status: 'error',
-      });
-      return false;
-    }
-
-    if (!botInfo) {
-      toast({
-        title: 'Erro',
-        description: 'Informações do bot não disponíveis',
-        status: 'error',
-      });
-      return false;
-    }
+  const updateBotUsage = async (tokensUsed: number) => {
+    if (!user || !botInfo) return;
 
     try {
-      const result = await botUsageService.updateUsage(
+      const result = await botUsageService.registerUsage(
         window.location.origin,
-        user.id,
-        botInfo.tenant_id,
         botInfo.bot_id,
         tokensUsed,
-        interactions
+        'chat'
       );
 
       if (!result.success) {
-        toast({
-          title: 'Erro',
-          description: result.error || 'Falha ao atualizar uso do bot',
-          status: 'error',
-        });
-        return false;
+        console.error('Erro ao registrar uso do bot:', result.error);
+        return;
       }
 
-      // Atualizar informações do bot com os novos valores
+      // Atualizar o estado local com as novas informações
       setBotInfo(prev => prev ? {
         ...prev,
-        current_interactions: result.interactions || prev.current_interactions,
-        available_interactions: result.available_interactions || prev.available_interactions
+        current_interactions: (prev.current_interactions || 0) + 1,
+        available_interactions: (prev.available_interactions || 0) - 1
       } : null);
 
-      return true;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao atualizar uso';
-      toast({
-        title: 'Erro',
-        description: errorMessage,
-        status: 'error',
-      });
-      return false;
+    } catch (error) {
+      console.error('Erro ao registrar uso do bot:', error);
     }
   };
 
@@ -166,7 +137,7 @@ export const useBotUsage = () => {
     botInfo,
     isLoading,
     error,
-    updateUsage,
+    updateBotUsage,
     canInteract,
     getRemainingInteractions,
     getAccessStatus,
