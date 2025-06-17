@@ -51,7 +51,7 @@ export const botUsageService = {
     return data[0];
   },
 
-  // Registrar uso do bot
+  // Registrar uso do bot usando o consumo real de tokens da LLM
   async registerUsage(
     website: string,
     botId: string,
@@ -59,18 +59,37 @@ export const botUsageService = {
     actionType: string = 'chat'
   ): Promise<UsageResult> {
     try {
-      const { data, error } = await supabaseClient.rpc('register_public_bot_usage', {
+      // Primeiro tenta atualizar o registro existente
+      const { data: updateData, error: updateError } = await supabaseClient.rpc('update_bot_usage_no_auth', {
         p_website: website,
         p_bot_id: botId,
         p_tokens_used: tokensUsed,
-        p_action_type: actionType
+        p_interactions: 1
       });
 
-      if (error) {
-        console.error('Erro ao registrar uso do bot:', error);
+      // Se não encontrou registro para atualizar, cria um novo
+      if (updateError || !updateData) {
+        const { data: createData, error: createError } = await supabaseClient.rpc('record_bot_usage_no_auth', {
+          p_website: website,
+          p_bot_id: botId,
+          p_tokens_used: tokensUsed,
+          p_interactions: 1
+        });
+
+        if (createError) {
+          console.error('Erro ao registrar uso do bot:', createError);
+          return {
+            success: false,
+            error: createError.message
+          };
+        }
+
         return {
-          success: false,
-          error: error.message
+          success: true,
+          bot_id: botId,
+          tokens_used: tokensUsed,
+          interactions: 1,
+          ...createData
         };
       }
 
@@ -78,7 +97,8 @@ export const botUsageService = {
         success: true,
         bot_id: botId,
         tokens_used: tokensUsed,
-        interactions: 1
+        interactions: 1,
+        ...updateData
       };
     } catch (error) {
       console.error('Erro ao registrar uso:', error);
@@ -86,6 +106,28 @@ export const botUsageService = {
         success: false,
         error: error instanceof Error ? error.message : 'Erro desconhecido'
       };
+    }
+  },
+
+  // Função para obter o consumo de tokens da LLM
+  async getLLMTokenUsage(message: string, conversationHistory: any[] = []): Promise<number> {
+    try {
+      const response = await fetch('/api/chatgpt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message,
+          conversationHistory
+        })
+      });
+
+      const data = await response.json();
+      return data.tokenCount || 0;
+    } catch (error) {
+      console.error('Erro ao obter consumo de tokens:', error);
+      return 0;
     }
   }
 }; 
