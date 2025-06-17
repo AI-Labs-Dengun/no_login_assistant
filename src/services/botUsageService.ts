@@ -1,10 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+import { db } from '../lib/supabase';
 
 export interface BotInfo {
   bot_id: string;
@@ -33,11 +28,15 @@ export const botUsageService = {
   // Obter informações do bot pela URL e usuário atual
   async getBotInfo(userId: string): Promise<BotInfo> {
     const website = window.location.origin;
-    const { data, error } = await supabaseClient
+    console.log('Obtendo informações do bot:', { website, userId });
+
+    const { data, error } = await supabase
       .rpc('get_bot_by_url', {
         p_website: website,
         p_user_id: userId
       });
+
+    console.log('Resultado da busca do bot:', { data, error });
 
     if (error) {
       console.error('Erro ao obter informações do bot:', error);
@@ -45,9 +44,11 @@ export const botUsageService = {
     }
 
     if (!data || data.length === 0) {
+      console.error('Bot não encontrado:', { website, userId });
       throw new Error('Bot não encontrado ou não disponível para este usuário');
     }
 
+    console.log('Bot encontrado:', data[0]);
     return data[0];
   },
 
@@ -59,37 +60,38 @@ export const botUsageService = {
     actionType: string = 'chat'
   ): Promise<UsageResult> {
     try {
-      // Primeiro tenta atualizar o registro existente
-      const { data: updateData, error: updateError } = await supabaseClient.rpc('update_bot_usage_no_auth', {
+      console.log('Iniciando registro de uso:', { website, botId, tokensUsed, actionType });
+
+      // Atualiza o uso do cliente
+      const { data: clientUsageData, error: clientUsageError } = await db.clientBotUsage.updateClientUsage({
+        website,
+        tokens: tokensUsed,
+        interactions: 1
+      });
+
+      if (clientUsageError) {
+        console.error('Erro ao atualizar uso do cliente:', clientUsageError);
+        return {
+          success: false,
+          error: clientUsageError.message
+        };
+      }
+
+      // Atualiza o uso do bot
+      const { data: updateData, error: updateError } = await supabase.rpc('update_bot_usage_no_auth', {
         p_website: website,
         p_bot_id: botId,
         p_tokens_used: tokensUsed,
         p_interactions: 1
       });
 
-      // Se não encontrou registro para atualizar, cria um novo
-      if (updateError || !updateData) {
-        const { data: createData, error: createError } = await supabaseClient.rpc('record_bot_usage_no_auth', {
-          p_website: website,
-          p_bot_id: botId,
-          p_tokens_used: tokensUsed,
-          p_interactions: 1
-        });
+      console.log('Resultado da atualização:', { updateData, updateError });
 
-        if (createError) {
-          console.error('Erro ao registrar uso do bot:', createError);
-          return {
-            success: false,
-            error: createError.message
-          };
-        }
-
+      if (updateError) {
+        console.error('Erro ao atualizar uso do bot:', updateError);
         return {
-          success: true,
-          bot_id: botId,
-          tokens_used: tokensUsed,
-          interactions: 1,
-          ...createData
+          success: false,
+          error: updateError.message
         };
       }
 

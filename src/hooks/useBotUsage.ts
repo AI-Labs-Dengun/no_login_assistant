@@ -42,7 +42,17 @@ export const useBotUsage = () => {
   };
 
   const updateBotUsage = async (tokensUsed: number) => {
-    if (!user || !botInfo) return;
+    if (!user || !botInfo) {
+      console.error('Usuário ou informações do bot não disponíveis:', { user, botInfo });
+      return;
+    }
+
+    console.log('Atualizando uso do bot:', {
+      website: window.location.origin,
+      botId: botInfo.bot_id,
+      tokensUsed,
+      userId: user.id
+    });
 
     try {
       const result = await botUsageService.registerUsage(
@@ -50,6 +60,8 @@ export const useBotUsage = () => {
         botInfo.bot_id,
         tokensUsed
       );
+
+      console.log('Resultado da atualização:', result);
 
       if (!result.success) {
         console.error('Erro ao registrar uso do bot:', result.error);

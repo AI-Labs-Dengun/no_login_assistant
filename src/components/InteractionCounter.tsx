@@ -15,6 +15,13 @@ const InteractionContext = createContext<InteractionContextType | undefined>(und
 const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [interactionCount, setInteractionCount] = useState(0);
 
+  // Função para obter a URL do website
+  const getWebsite = () => {
+    const origin = window.location.origin;
+    // Garante que a URL use HTTPS
+    return origin.replace(/^http:\/\//, 'https://');
+  };
+
   const addInteraction = async () => {
     const newCount = interactionCount + 1;
     setInteractionCount(newCount);
@@ -25,12 +32,12 @@ const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: botData } = await supabase
           .from('super_bots')
           .select('id, website')
-          .eq('website', window.location.origin)
+          .eq('website', getWebsite())
           .single();
 
         if (botData) {
           await supabase.rpc('sync_counters', {
-            p_website: window.location.origin,
+            p_website: getWebsite(),
             p_bot_id: botData.id,
             p_token_count: 0, // Será atualizado pelo TokenCounter
             p_interaction_count: newCount
@@ -51,12 +58,12 @@ const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: botData } = await supabase
           .from('super_bots')
           .select('id, website')
-          .eq('website', window.location.origin)
+          .eq('website', getWebsite())
           .single();
 
         if (botData) {
           await supabase.rpc('sync_counters', {
-            p_website: window.location.origin,
+            p_website: getWebsite(),
             p_bot_id: botData.id,
             p_token_count: 0,
             p_interaction_count: 0
@@ -77,12 +84,12 @@ const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const { data: botData } = await supabase
             .from('super_bots')
             .select('id, website')
-            .eq('website', window.location.origin)
+            .eq('website', getWebsite())
             .single();
 
           if (botData) {
             const { data: counters } = await supabase.rpc('get_current_counters', {
-              p_website: window.location.origin,
+              p_website: getWebsite(),
               p_bot_id: botData.id
             });
 

@@ -10,7 +10,14 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
 // Create a single supabase client for interacting with your database
 export const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  }
 );
 
 // Helper functions for common database operations
@@ -84,6 +91,42 @@ export const db = {
         .single();
       if (error) throw error;
       return data;
+    },
+    async updateClientUsage({ website, tokens = 0, interactions = 1 }: { website: string, tokens?: number, interactions?: number }) {
+      try {
+        // Primeiro verifica se existe um registro para o website
+        const { data: existingData, error: checkError } = await supabase
+          .from('client_bot_usage')
+          .select('*')
+          .eq('website', website)
+          .single();
+
+        if (checkError && checkError.code !== 'PGRST116') { // PGRST116 é o código para "nenhum resultado encontrado"
+          throw checkError;
+        }
+
+        if (!existingData) {
+          throw new Error(`Nenhum registro encontrado para o website: ${website}`);
+        }
+
+        // Atualiza o registro existente
+        const { data, error } = await supabase
+          .from('client_bot_usage')
+          .update({
+            tokens_used: (existingData.tokens_used || 0) + tokens,
+            interactions: (existingData.interactions || 0) + interactions,
+            updated_at: new Date().toISOString()
+          })
+          .eq('website', website)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Erro ao atualizar uso do cliente:', error);
+        throw error;
+      }
     },
     async registerUsage({
       website,

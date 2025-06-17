@@ -16,6 +16,7 @@ import showToast from '../../lib/toast';
 import TypingIndicator from '../../components/TypingIndicator';
 import { useTokenCounter, TokenCounter } from '../../components/TokenCounter';
 import { useInteractionCounter, InteractionCounter } from '../../components/InteractionCounter';
+import { supabase, db } from '../../lib/supabase';
 
 const EmojiPicker = dynamic(() => import('@emoji-mart/react').then(mod => mod.default), {
   ssr: false,
@@ -320,6 +321,13 @@ const ChatComponent = () => {
     }
   };
 
+  // Função para obter a URL do website
+  const getWebsite = () => {
+    const origin = window.location.origin;
+    // Garante que a URL use HTTPS
+    return origin.replace(/^http:\/\//, 'https://');
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     if (greetingLoading) return;
     e.preventDefault();
@@ -369,13 +377,34 @@ const ChatComponent = () => {
       });
       const data = await res.json();
       
-      // Adicionar tokens ao contador
+      // Atualiza os contadores e registra o uso
       if (data.tokenCount) {
+        // Atualiza o contador de tokens
         addTokens(data.tokenCount);
-      }
+        
+        // Atualiza o contador de interações
+        addInteraction();
 
-      // Incrementar contador de interações
-      addInteraction();
+        // Registra o uso no banco de dados
+        try {
+          const website = getWebsite();
+          const { data: botData } = await supabase
+            .from('super_bots')
+            .select('id')
+            .eq('website', website)
+            .single();
+
+          if (botData) {
+            await db.clientBotUsage.updateClientUsage({
+              website,
+              tokens: data.tokenCount,
+              interactions: 1
+            });
+          }
+        } catch (error) {
+          console.error('Erro ao atualizar uso:', error);
+        }
+      }
 
       setIsTyping(false);
       setMessages((prev) => [
@@ -706,13 +735,34 @@ const ChatComponent = () => {
       });
       const data = await res.json();
       
-      // Adicionar tokens ao contador
+      // Atualiza os contadores e registra o uso
       if (data.tokenCount) {
+        // Atualiza o contador de tokens
         addTokens(data.tokenCount);
+        
+        // Atualiza o contador de interações
+        addInteraction();
+
+        // Registra o uso no banco de dados
+        try {
+          const website = getWebsite();
+          const { data: botData } = await supabase
+            .from('super_bots')
+            .select('id')
+            .eq('website', website)
+            .single();
+
+          if (botData) {
+            await db.clientBotUsage.updateClientUsage({
+              website,
+              tokens: data.tokenCount,
+              interactions: 1
+            });
+          }
+        } catch (error) {
+          console.error('Erro ao atualizar uso:', error);
+        }
       }
-      
-      // Incrementar contador de interações
-      addInteraction();
 
       setMessages((prev) => [
         ...prev,
