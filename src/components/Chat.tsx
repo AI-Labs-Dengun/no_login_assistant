@@ -17,7 +17,7 @@ export const Chat = () => {
     botInfo,
     isLoading: isBotLoading,
     error: botError,
-    updateUsage,
+    updateBotUsage,
     canInteract,
     getRemainingInteractions,
     getAccessStatus
@@ -51,13 +51,9 @@ export const Chat = () => {
       // Aqui você deve implementar a lógica real de processamento da mensagem
       const tokensUsed = await processMessage(inputMessage);
       
-      // Atualizar uso do bot
-      const success = await updateUsage(tokensUsed, 1);
+      // Registrar o uso do bot
+      await updateBotUsage(tokensUsed);
       
-      if (!success) {
-        throw new Error('Falha ao atualizar uso do bot');
-      }
-
       // Simular resposta do bot
       // Aqui você deve implementar a lógica real de resposta do bot
       const botResponse: Message = {
@@ -67,9 +63,10 @@ export const Chat = () => {
       setMessages(prev => [...prev, botResponse]);
 
     } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
       toast({
         title: 'Erro',
-        description: error instanceof Error ? error.message : 'Erro ao processar mensagem',
+        description: 'Falha ao enviar mensagem. Tente novamente.',
         status: 'error',
       });
     } finally {
