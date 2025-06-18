@@ -37,20 +37,30 @@ export async function initializeBotUsageForCurrentWebsite(): Promise<boolean> {
       return true;
     }
 
-    // Se não existe, criar um novo registro usando a função do banco
-    console.log('[initializeBotUsage] Criando novo registro...');
-    const { data: createData, error: createError } = await supabase.rpc('register_public_bot_usage', {
-      p_website: website,
-      p_bot_id: '00000000-0000-0000-0000-000000000000', // ID padrão
-      p_tokens_used: 0,
-      p_action_type: 'chat'
-    });
+    // Se não existe, criar um novo registro diretamente
+    console.log('[initializeBotUsage] Criando novo registro diretamente...');
+    const { data: insertData, error: insertError } = await supabase
+      .from('client_bot_usage')
+      .insert({
+        website: website,
+        bot_name: 'AI Assistant',
+        enabled: true,
+        tokens_used: 0,
+        interactions: 0,
+        available_interactions: 1000000,
+        total_tokens: 0,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
 
-    if (createError) {
-      console.error('[initializeBotUsage] Erro ao criar registro:', createError);
+    if (insertError) {
+      console.error('[initializeBotUsage] Erro ao inserir registro diretamente:', insertError);
       
-      // Como fallback, tentar inserção direta
-      const { error: insertError } = await supabase
+      // Como última tentativa, tentar com dados mínimos
+      const { data: fallbackData, error: fallbackError } = await supabase
         .from('client_bot_usage')
         .insert({
           website: website,
@@ -58,23 +68,22 @@ export async function initializeBotUsageForCurrentWebsite(): Promise<boolean> {
           enabled: true,
           tokens_used: 0,
           interactions: 0,
-          available_interactions: 1000000,
           total_tokens: 0,
-          status: 'active',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
+          status: 'active'
+        })
+        .select()
+        .single();
 
-      if (insertError) {
-        console.error('[initializeBotUsage] Erro ao inserir registro diretamente:', insertError);
+      if (fallbackError) {
+        console.error('[initializeBotUsage] Erro no fallback:', fallbackError);
         return false;
       }
       
-      console.log('[initializeBotUsage] Registro criado diretamente com sucesso');
+      console.log('[initializeBotUsage] Registro criado via fallback com sucesso:', fallbackData);
       return true;
     }
 
-    console.log('[initializeBotUsage] Registro criado via RPC com sucesso:', createData);
+    console.log('[initializeBotUsage] Registro criado diretamente com sucesso:', insertData);
     return true;
   } catch (error) {
     console.error('[initializeBotUsage] Erro geral:', error);

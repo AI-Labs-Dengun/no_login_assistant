@@ -107,9 +107,10 @@ const ChatComponent = () => {
       (async () => {
         try {
           const { initializeBotUsageForCurrentWebsite } = await import('../../lib/initializeBotUsage');
-          await initializeBotUsageForCurrentWebsite();
+          const result = await initializeBotUsageForCurrentWebsite();
+          console.log('[ChatComponent][initBot] Resultado da inicialização:', result);
         } catch (error) {
-          console.error('Erro ao inicializar registro de uso do bot:', error);
+          console.error('[ChatComponent][initBot] Erro ao inicializar registro de uso do bot:', error);
         }
       })();
       

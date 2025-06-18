@@ -97,12 +97,11 @@ export const db = {
       try {
         console.log('[clientBotUsage][updateClientUsage] INICIO', { website, tokens, interactions });
         
-        // Busca registro existente
+        // Busca registro existente (qualquer registro para o website)
         const { data: existingDataArr, error: checkError } = await supabase
           .from('client_bot_usage')
           .select('*')
           .eq('website', website)
-          .eq('enabled', true)
           .limit(1);
         console.log('[clientBotUsage][updateClientUsage][DEBUG] Resultado da busca:', existingDataArr, 'Erro:', checkError, 'website:', website);
         const existingData = Array.isArray(existingDataArr) && existingDataArr.length > 0 ? existingDataArr[0] : null;
@@ -128,7 +127,6 @@ export const db = {
             .from('client_bot_usage')
             .select('*')
             .eq('website', website)
-            .eq('enabled', true)
             .limit(1);
           
           if (newCheckError) throw newCheckError;
@@ -138,10 +136,12 @@ export const db = {
             throw new Error(`Registro não encontrado após inicialização para o website: ${website}`);
           }
           
-          // Atualizar o registro recém-criado
+          // Garantir que o registro está habilitado e atualizar
           const updatePayload = {
             tokens_used: (newData.tokens_used || 0) + tokens,
             interactions: (newData.interactions || 0) + interactions,
+            enabled: true, // Garantir que está habilitado
+            status: 'active', // Garantir que está ativo
             updated_at: new Date().toISOString()
           };
           
@@ -161,26 +161,25 @@ export const db = {
         const updatePayload = {
           tokens_used: (existingData.tokens_used || 0) + tokens,
           interactions: (existingData.interactions || 0) + interactions,
+          enabled: true, // Garantir que está habilitado
+          status: 'active', // Garantir que está ativo
           updated_at: new Date().toISOString()
         };
         console.log('[clientBotUsage][updateClientUsage][DEBUG] Payload para update:', updatePayload);
         const { data, error } = await supabase
           .from('client_bot_usage')
           .update(updatePayload)
-          .eq('website', website)
-          .eq('enabled', true)
+          .eq('id', existingData.id)
           .select()
-          .limit(1);
+          .single();
         console.log('[clientBotUsage][updateClientUsage][DEBUG] Resultado do update:', data, 'Erro:', error);
-
-        const updatedData = Array.isArray(data) && data.length > 0 ? data[0] : null;
 
         if (error) {
           console.error('[clientBotUsage][updateClientUsage][DEBUG] Erro ao atualizar registro:', error);
           throw error;
         }
-        console.log('[clientBotUsage][updateClientUsage][DEBUG] Update realizado com sucesso:', updatedData);
-        return updatedData;
+        console.log('[clientBotUsage][updateClientUsage][DEBUG] Update realizado com sucesso:', data);
+        return data;
       } catch (error) {
         console.error('[clientBotUsage][updateClientUsage][DEBUG] Erro geral:', error);
         throw error;
