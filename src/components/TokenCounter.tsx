@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useTheme } from '../app/providers/ThemeProvider';
-import { supabase } from '../lib/supabase';
+import { supabase, db } from '../lib/supabase';
 
 interface TokenContextType {
   tokenCount: number;
@@ -29,30 +29,11 @@ const TokenProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { data: usageDataArr, error } = await supabase
-          .from('client_bot_usage')
-          .select('*')
-          .eq('website', getWebsite())
-          .eq('enabled', true)
-          .limit(1);
-        const usageData = Array.isArray(usageDataArr) && usageDataArr.length > 0 ? usageDataArr[0] : null;
-        if (error) {
-          console.error('[TokenCounter][addTokens] Erro ao buscar usageData:', error);
-        }
-        if (usageData) {
-          const { data: updateResult, error: updateError } = await supabase
-            .from('client_bot_usage')
-            .update({ tokens_used: newCount, updated_at: new Date().toISOString() })
-            .eq('id', usageData.id)
-            .select();
-          if (updateError) {
-            console.error('[TokenCounter][addTokens] Erro ao atualizar tokens:', updateError);
-          } else {
-            console.log('[TokenCounter][addTokens] Tokens atualizados:', updateResult);
-          }
-        } else {
-          console.warn('[TokenCounter][addTokens] Nenhum usageData encontrado para o website:', getWebsite());
-        }
+        await db.clientBotUsage.updateClientUsage({
+          website: getWebsite(),
+          tokens: count,
+          interactions: 0
+        });
       }
     } catch (error) {
       console.error('Error syncing token count:', error);
@@ -61,37 +42,7 @@ const TokenProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   const resetTokens = async () => {
     setTokenCount(0);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: usageDataArr, error } = await supabase
-          .from('client_bot_usage')
-          .select('*')
-          .eq('website', getWebsite())
-          .eq('enabled', true)
-          .limit(1);
-        const usageData = Array.isArray(usageDataArr) && usageDataArr.length > 0 ? usageDataArr[0] : null;
-        if (error) {
-          console.error('[TokenCounter][resetTokens] Erro ao buscar usageData:', error);
-        }
-        if (usageData) {
-          const { data: updateResult, error: updateError } = await supabase
-            .from('client_bot_usage')
-            .update({ tokens_used: 0, updated_at: new Date().toISOString() })
-            .eq('id', usageData.id)
-            .select();
-          if (updateError) {
-            console.error('[TokenCounter][resetTokens] Erro ao resetar tokens:', updateError);
-          } else {
-            console.log('[TokenCounter][resetTokens] Tokens resetados:', updateResult);
-          }
-        } else {
-          console.warn('[TokenCounter][resetTokens] Nenhum usageData encontrado para o website:', getWebsite());
-        }
-      }
-    } catch (error) {
-      console.error('Error resetting token count:', error);
-    }
+    // Não faz update no banco, apenas local
   };
 
   // Carregar contador inicial

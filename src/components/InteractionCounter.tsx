@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useTheme } from '../app/providers/ThemeProvider';
-import { supabase } from '../lib/supabase';
+import { supabase, db } from '../lib/supabase';
 
 interface InteractionContextType {
   interactionCount: number;
@@ -29,30 +29,11 @@ const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { data: usageDataArr, error } = await supabase
-          .from('client_bot_usage')
-          .select('*')
-          .eq('website', getWebsite())
-          .eq('enabled', true)
-          .limit(1);
-        const usageData = Array.isArray(usageDataArr) && usageDataArr.length > 0 ? usageDataArr[0] : null;
-        if (error) {
-          console.error('[InteractionCounter][addInteraction] Erro ao buscar usageData:', error);
-        }
-        if (usageData) {
-          const { data: updateResult, error: updateError } = await supabase
-            .from('client_bot_usage')
-            .update({ interactions: newCount, updated_at: new Date().toISOString() })
-            .eq('id', usageData.id)
-            .select();
-          if (updateError) {
-            console.error('[InteractionCounter][addInteraction] Erro ao atualizar interações:', updateError);
-          } else {
-            console.log('[InteractionCounter][addInteraction] Interações atualizadas:', updateResult);
-          }
-        } else {
-          console.warn('[InteractionCounter][addInteraction] Nenhum usageData encontrado para o website:', getWebsite());
-        }
+        await db.clientBotUsage.updateClientUsage({
+          website: getWebsite(),
+          tokens: 0,
+          interactions: 1
+        });
       }
     } catch (error) {
       console.error('Error syncing interaction count:', error);
@@ -61,37 +42,7 @@ const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetInteractions = async () => {
     setInteractionCount(0);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: usageDataArr, error } = await supabase
-          .from('client_bot_usage')
-          .select('*')
-          .eq('website', getWebsite())
-          .eq('enabled', true)
-          .limit(1);
-        const usageData = Array.isArray(usageDataArr) && usageDataArr.length > 0 ? usageDataArr[0] : null;
-        if (error) {
-          console.error('[InteractionCounter][resetInteractions] Erro ao buscar usageData:', error);
-        }
-        if (usageData) {
-          const { data: updateResult, error: updateError } = await supabase
-            .from('client_bot_usage')
-            .update({ interactions: 0, updated_at: new Date().toISOString() })
-            .eq('id', usageData.id)
-            .select();
-          if (updateError) {
-            console.error('[InteractionCounter][resetInteractions] Erro ao resetar interações:', updateError);
-          } else {
-            console.log('[InteractionCounter][resetInteractions] Interações resetadas:', updateResult);
-          }
-        } else {
-          console.warn('[InteractionCounter][resetInteractions] Nenhum usageData encontrado para o website:', getWebsite());
-        }
-      }
-    } catch (error) {
-      console.error('Error resetting interaction count:', error);
-    }
+    // Não faz update no banco, apenas local
   };
 
   // Carregar contador inicial
