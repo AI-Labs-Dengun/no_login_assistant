@@ -96,21 +96,23 @@ export const db = {
     async updateClientUsage({ website, tokens = 0, interactions = 1 }: { website: string, tokens?: number, interactions?: number }) {
       try {
         console.log('[clientBotUsage][updateClientUsage] INICIO', { website, tokens, interactions });
-        // Primeiro verifica se existe um registro para o website
+        // Busca registro existente
         const { data: existingDataArr, error: checkError } = await supabase
           .from('client_bot_usage')
           .select('*')
           .eq('website', website)
+          .eq('enabled', true)
           .limit(1);
+        console.log('[clientBotUsage][updateClientUsage][DEBUG] Resultado da busca:', existingDataArr, 'Erro:', checkError, 'website:', website);
         const existingData = Array.isArray(existingDataArr) && existingDataArr.length > 0 ? existingDataArr[0] : null;
 
         if (checkError && checkError.code !== 'PGRST116') {
-          console.error('[clientBotUsage][updateClientUsage] Erro ao buscar registro:', checkError);
+          console.error('[clientBotUsage][updateClientUsage][DEBUG] Erro na consulta à tabela client_bot_usage:', checkError);
           throw checkError;
         }
 
         if (!existingData) {
-          console.error(`[clientBotUsage][updateClientUsage] Nenhum registro encontrado para o website: ${website}`);
+          console.error(`[clientBotUsage][updateClientUsage][DEBUG] Nenhum registro encontrado para o website: ${website} com enabled=true`);
           throw new Error(`Nenhum registro encontrado para o website: ${website}`);
         }
 
@@ -120,24 +122,26 @@ export const db = {
           interactions: (existingData.interactions || 0) + interactions,
           updated_at: new Date().toISOString()
         };
-        console.log('[clientBotUsage][updateClientUsage] Payload para update:', updatePayload);
+        console.log('[clientBotUsage][updateClientUsage][DEBUG] Payload para update:', updatePayload);
         const { data, error } = await supabase
           .from('client_bot_usage')
           .update(updatePayload)
           .eq('website', website)
+          .eq('enabled', true)
           .select()
           .limit(1);
+        console.log('[clientBotUsage][updateClientUsage][DEBUG] Resultado do update:', data, 'Erro:', error);
 
         const updatedData = Array.isArray(data) && data.length > 0 ? data[0] : null;
 
         if (error) {
-          console.error('[clientBotUsage][updateClientUsage] Erro ao atualizar registro:', error);
+          console.error('[clientBotUsage][updateClientUsage][DEBUG] Erro ao atualizar registro:', error);
           throw error;
         }
-        console.log('[clientBotUsage][updateClientUsage] Update realizado com sucesso:', updatedData);
+        console.log('[clientBotUsage][updateClientUsage][DEBUG] Update realizado com sucesso:', updatedData);
         return updatedData;
       } catch (error) {
-        console.error('[clientBotUsage][updateClientUsage] Erro geral:', error);
+        console.error('[clientBotUsage][updateClientUsage][DEBUG] Erro geral:', error);
         throw error;
       }
     },
