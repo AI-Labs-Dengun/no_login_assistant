@@ -31,13 +31,14 @@ export const botUsageService = {
     console.log('Obtendo informações do bot:', { website, userId });
 
     // Buscar diretamente na tabela client_bot_usage
-    const { data, error } = await supabase
+    const { data: dataArr, error } = await supabase
       .from('client_bot_usage')
       .select('*')
       .eq('website', website)
       .eq('user_id', userId)
       .eq('enabled', true)
-      .single();
+      .limit(1);
+    const data = Array.isArray(dataArr) && dataArr.length > 0 ? dataArr[0] : null;
 
     console.log('Resultado da busca do bot em client_bot_usage:', { data, error });
 
