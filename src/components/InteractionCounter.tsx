@@ -29,12 +29,13 @@ const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { data: usageData, error } = await supabase
+        const { data: usageDataArr, error } = await supabase
           .from('client_bot_usage')
           .select('*')
           .eq('website', getWebsite())
           .eq('enabled', true)
-          .single();
+          .limit(1);
+        const usageData = Array.isArray(usageDataArr) && usageDataArr.length > 0 ? usageDataArr[0] : null;
         if (error) {
           console.error('[InteractionCounter][addInteraction] Erro ao buscar usageData:', error);
         }
@@ -63,12 +64,13 @@ const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { data: usageData, error } = await supabase
+        const { data: usageDataArr, error } = await supabase
           .from('client_bot_usage')
           .select('*')
           .eq('website', getWebsite())
           .eq('enabled', true)
-          .single();
+          .limit(1);
+        const usageData = Array.isArray(usageDataArr) && usageDataArr.length > 0 ? usageDataArr[0] : null;
         if (error) {
           console.error('[InteractionCounter][resetInteractions] Erro ao buscar usageData:', error);
         }
@@ -98,12 +100,13 @@ const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          const { data: usageData, error } = await supabase
+          const { data: usageDataArr, error } = await supabase
             .from('client_bot_usage')
             .select('*')
             .eq('website', getWebsite())
             .eq('enabled', true)
-            .single();
+            .limit(1);
+          const usageData = Array.isArray(usageDataArr) && usageDataArr.length > 0 ? usageDataArr[0] : null;
           if (error) {
             console.error('[InteractionCounter][loadInitialCount] Erro ao buscar usageData:', error);
           }
