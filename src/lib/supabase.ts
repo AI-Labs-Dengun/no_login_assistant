@@ -104,7 +104,7 @@ export const db = {
           .limit(1);
         const existingData = Array.isArray(existingDataArr) && existingDataArr.length > 0 ? existingDataArr[0] : null;
 
-        if (checkError && checkError.code !== 'PGRST116') { // PGRST116 é o código para "nenhum resultado encontrado"
+        if (checkError && checkError.code !== 'PGRST116') {
           console.error('[clientBotUsage][updateClientUsage] Erro ao buscar registro:', checkError);
           throw checkError;
         }
@@ -114,7 +114,7 @@ export const db = {
           throw new Error(`Nenhum registro encontrado para o website: ${website}`);
         }
 
-        // Atualiza o registro existente
+        // Atualiza o registro existente apenas incrementando
         const updatePayload = {
           tokens_used: (existingData.tokens_used || 0) + tokens,
           interactions: (existingData.interactions || 0) + interactions,
