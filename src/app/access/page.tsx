@@ -8,7 +8,7 @@ import { loggingService } from '@/services/logging';
 export default function AccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const token = searchParams?.get('token');
 
   useEffect(() => {
     if (token) {
