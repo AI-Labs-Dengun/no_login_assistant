@@ -88,19 +88,21 @@ export const db = {
         .from('client_bot_usage')
         .select('*')
         .eq('website', website)
-        .single();
+        .limit(1);
+      const usageData = Array.isArray(data) && data.length > 0 ? data[0] : null;
       if (error) throw error;
-      return data;
+      return usageData;
     },
     async updateClientUsage({ website, tokens = 0, interactions = 1 }: { website: string, tokens?: number, interactions?: number }) {
       try {
         console.log('[clientBotUsage][updateClientUsage] INICIO', { website, tokens, interactions });
         // Primeiro verifica se existe um registro para o website
-        const { data: existingData, error: checkError } = await supabase
+        const { data: existingDataArr, error: checkError } = await supabase
           .from('client_bot_usage')
           .select('*')
           .eq('website', website)
-          .single();
+          .limit(1);
+        const existingData = Array.isArray(existingDataArr) && existingDataArr.length > 0 ? existingDataArr[0] : null;
 
         if (checkError && checkError.code !== 'PGRST116') { // PGRST116 é o código para "nenhum resultado encontrado"
           console.error('[clientBotUsage][updateClientUsage] Erro ao buscar registro:', checkError);
@@ -124,14 +126,16 @@ export const db = {
           .update(updatePayload)
           .eq('website', website)
           .select()
-          .single();
+          .limit(1);
+
+        const updatedData = Array.isArray(data) && data.length > 0 ? data[0] : null;
 
         if (error) {
           console.error('[clientBotUsage][updateClientUsage] Erro ao atualizar registro:', error);
           throw error;
         }
-        console.log('[clientBotUsage][updateClientUsage] Update realizado com sucesso:', data);
-        return data;
+        console.log('[clientBotUsage][updateClientUsage] Update realizado com sucesso:', updatedData);
+        return updatedData;
       } catch (error) {
         console.error('[clientBotUsage][updateClientUsage] Erro geral:', error);
         throw error;
