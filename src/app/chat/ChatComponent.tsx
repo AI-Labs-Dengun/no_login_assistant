@@ -393,7 +393,7 @@ const ChatComponent = () => {
           console.log('[ChatComponent][handleSendMessage] Hostname/website:', website);
           console.log('[ChatComponent][handleSendMessage] Tokens usados:', data.tokenCount);
           const { data: botData, error: botDataError } = await supabase
-            .from('super_bots')
+            .from('client_bot_usage')
             .select('id')
             .eq('website', website)
             .single();
@@ -754,22 +754,23 @@ const ChatComponent = () => {
         // Atualiza o contador de interações
         addInteraction();
 
-        // Registra o uso no banco de dados
+        // Registra o uso no banco de dados usando a tabela correta (client_bot_usage)
         try {
           const website = getWebsite();
           console.log('[ChatComponent][handleTooltipClick] Hostname/website:', website);
           console.log('[ChatComponent][handleTooltipClick] Tokens usados:', data.tokenCount);
-          const { data: botData, error: botDataError } = await supabase
-            .from('super_bots')
+          const { data: usageData, error: usageDataError } = await supabase
+            .from('client_bot_usage')
             .select('id')
             .eq('website', website)
+            .eq('enabled', true)
             .single();
 
-          if (botDataError) {
-            console.error('[ChatComponent][handleTooltipClick] Erro ao buscar botData:', botDataError);
+          if (usageDataError) {
+            console.error('[ChatComponent][handleTooltipClick] Erro ao buscar usageData:', usageDataError);
           }
-          if (botData) {
-            console.log('[ChatComponent][handleTooltipClick] botData:', botData);
+          if (usageData) {
+            console.log('[ChatComponent][handleTooltipClick] usageData:', usageData);
             const updateResult = await db.clientBotUsage.updateClientUsage({
               website,
               tokens: data.tokenCount,
@@ -777,7 +778,7 @@ const ChatComponent = () => {
             });
             console.log('[ChatComponent][handleTooltipClick] Resultado do updateClientUsage:', updateResult);
           } else {
-            console.warn('[ChatComponent][handleTooltipClick] Nenhum botData encontrado para o website:', website);
+            console.warn('[ChatComponent][handleTooltipClick] Nenhum usageData encontrado para o website:', website);
           }
         } catch (error) {
           console.error('[ChatComponent][handleTooltipClick] Erro ao atualizar uso:', error);

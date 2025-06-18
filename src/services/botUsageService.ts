@@ -30,26 +30,29 @@ export const botUsageService = {
     const website = window.location.origin;
     console.log('Obtendo informações do bot:', { website, userId });
 
+    // Buscar diretamente na tabela client_bot_usage
     const { data, error } = await supabase
-      .rpc('get_bot_by_url', {
-        p_website: website,
-        p_user_id: userId
-      });
+      .from('client_bot_usage')
+      .select('*')
+      .eq('website', website)
+      .eq('user_id', userId)
+      .eq('enabled', true)
+      .single();
 
-    console.log('Resultado da busca do bot:', { data, error });
+    console.log('Resultado da busca do bot em client_bot_usage:', { data, error });
 
     if (error) {
       console.error('Erro ao obter informações do bot:', error);
       throw new Error('Falha ao obter informações do bot');
     }
 
-    if (!data || data.length === 0) {
+    if (!data) {
       console.error('Bot não encontrado:', { website, userId });
       throw new Error('Bot não encontrado ou não disponível para este usuário');
     }
 
-    console.log('Bot encontrado:', data[0]);
-    return data[0];
+    console.log('Bot encontrado:', data);
+    return data;
   },
 
   // Registrar uso do bot usando o consumo real de tokens da LLM

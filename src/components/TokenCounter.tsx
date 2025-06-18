@@ -17,31 +17,40 @@ const TokenProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   // Função para obter a URL do website
   const getWebsite = () => {
-    const origin = window.location.origin;
-    // Garante que a URL use HTTPS
-    return origin.replace(/^http:\/\//, 'https://');
+    let origin = window.location.origin.replace(/^http:\/\//, 'https://');
+    if (!origin.endsWith('/')) origin += '/';
+    console.log('[TokenCounter][getWebsite] Valor de website buscado:', origin);
+    return origin;
   };
 
   const addTokens = async (count: number) => {
     const newCount = tokenCount + count;
     setTokenCount(newCount);
-    
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { data: botData } = await supabase
-          .from('super_bots')
-          .select('id, website')
+        const { data: usageData, error } = await supabase
+          .from('client_bot_usage')
+          .select('*')
           .eq('website', getWebsite())
+          .eq('enabled', true)
           .single();
-
-        if (botData) {
-          await supabase.rpc('sync_counters', {
-            p_website: getWebsite(),
-            p_bot_id: botData.id,
-            p_token_count: newCount,
-            p_interaction_count: 0 // Será atualizado pelo InteractionCounter
-          });
+        if (error) {
+          console.error('[TokenCounter][addTokens] Erro ao buscar usageData:', error);
+        }
+        if (usageData) {
+          const { data: updateResult, error: updateError } = await supabase
+            .from('client_bot_usage')
+            .update({ tokens_used: newCount, updated_at: new Date().toISOString() })
+            .eq('id', usageData.id)
+            .select();
+          if (updateError) {
+            console.error('[TokenCounter][addTokens] Erro ao atualizar tokens:', updateError);
+          } else {
+            console.log('[TokenCounter][addTokens] Tokens atualizados:', updateResult);
+          }
+        } else {
+          console.warn('[TokenCounter][addTokens] Nenhum usageData encontrado para o website:', getWebsite());
         }
       }
     } catch (error) {
@@ -51,23 +60,31 @@ const TokenProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   const resetTokens = async () => {
     setTokenCount(0);
-    
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { data: botData } = await supabase
-          .from('super_bots')
-          .select('id, website')
+        const { data: usageData, error } = await supabase
+          .from('client_bot_usage')
+          .select('*')
           .eq('website', getWebsite())
+          .eq('enabled', true)
           .single();
-
-        if (botData) {
-          await supabase.rpc('sync_counters', {
-            p_website: getWebsite(),
-            p_bot_id: botData.id,
-            p_token_count: 0,
-            p_interaction_count: 0
-          });
+        if (error) {
+          console.error('[TokenCounter][resetTokens] Erro ao buscar usageData:', error);
+        }
+        if (usageData) {
+          const { data: updateResult, error: updateError } = await supabase
+            .from('client_bot_usage')
+            .update({ tokens_used: 0, updated_at: new Date().toISOString() })
+            .eq('id', usageData.id)
+            .select();
+          if (updateError) {
+            console.error('[TokenCounter][resetTokens] Erro ao resetar tokens:', updateError);
+          } else {
+            console.log('[TokenCounter][resetTokens] Tokens resetados:', updateResult);
+          }
+        } else {
+          console.warn('[TokenCounter][resetTokens] Nenhum usageData encontrado para o website:', getWebsite());
         }
       }
     } catch (error) {
@@ -81,28 +98,25 @@ const TokenProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          const { data: botData } = await supabase
-            .from('super_bots')
-            .select('id, website')
+          const { data: usageData, error } = await supabase
+            .from('client_bot_usage')
+            .select('*')
             .eq('website', getWebsite())
+            .eq('enabled', true)
             .single();
-
-          if (botData) {
-            const { data: counters } = await supabase.rpc('get_current_counters', {
-              p_website: getWebsite(),
-              p_bot_id: botData.id
-            });
-
-            if (counters && counters.length > 0) {
-              setTokenCount(counters[0].tokens_used);
-            }
+          if (error) {
+            console.error('[TokenCounter][loadInitialCount] Erro ao buscar usageData:', error);
+          }
+          if (usageData) {
+            setTokenCount(usageData.tokens_used || 0);
+          } else {
+            console.warn('[TokenCounter][loadInitialCount] Nenhum usageData encontrado para o website:', getWebsite());
           }
         }
       } catch (error) {
         console.error('Error loading initial token count:', error);
       }
     };
-
     loadInitialCount();
   }, []);
 

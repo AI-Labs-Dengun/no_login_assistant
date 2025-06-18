@@ -17,31 +17,40 @@ const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Função para obter a URL do website
   const getWebsite = () => {
-    const origin = window.location.origin;
-    // Garante que a URL use HTTPS
-    return origin.replace(/^http:\/\//, 'https://');
+    let origin = window.location.origin.replace(/^http:\/\//, 'https://');
+    if (!origin.endsWith('/')) origin += '/';
+    console.log('[InteractionCounter][getWebsite] Valor de website buscado:', origin);
+    return origin;
   };
 
   const addInteraction = async () => {
     const newCount = interactionCount + 1;
     setInteractionCount(newCount);
-    
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { data: botData } = await supabase
-          .from('super_bots')
-          .select('id, website')
+        const { data: usageData, error } = await supabase
+          .from('client_bot_usage')
+          .select('*')
           .eq('website', getWebsite())
+          .eq('enabled', true)
           .single();
-
-        if (botData) {
-          await supabase.rpc('sync_counters', {
-            p_website: getWebsite(),
-            p_bot_id: botData.id,
-            p_token_count: 0, // Será atualizado pelo TokenCounter
-            p_interaction_count: newCount
-          });
+        if (error) {
+          console.error('[InteractionCounter][addInteraction] Erro ao buscar usageData:', error);
+        }
+        if (usageData) {
+          const { data: updateResult, error: updateError } = await supabase
+            .from('client_bot_usage')
+            .update({ interactions: newCount, updated_at: new Date().toISOString() })
+            .eq('id', usageData.id)
+            .select();
+          if (updateError) {
+            console.error('[InteractionCounter][addInteraction] Erro ao atualizar interações:', updateError);
+          } else {
+            console.log('[InteractionCounter][addInteraction] Interações atualizadas:', updateResult);
+          }
+        } else {
+          console.warn('[InteractionCounter][addInteraction] Nenhum usageData encontrado para o website:', getWebsite());
         }
       }
     } catch (error) {
@@ -51,23 +60,31 @@ const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetInteractions = async () => {
     setInteractionCount(0);
-    
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { data: botData } = await supabase
-          .from('super_bots')
-          .select('id, website')
+        const { data: usageData, error } = await supabase
+          .from('client_bot_usage')
+          .select('*')
           .eq('website', getWebsite())
+          .eq('enabled', true)
           .single();
-
-        if (botData) {
-          await supabase.rpc('sync_counters', {
-            p_website: getWebsite(),
-            p_bot_id: botData.id,
-            p_token_count: 0,
-            p_interaction_count: 0
-          });
+        if (error) {
+          console.error('[InteractionCounter][resetInteractions] Erro ao buscar usageData:', error);
+        }
+        if (usageData) {
+          const { data: updateResult, error: updateError } = await supabase
+            .from('client_bot_usage')
+            .update({ interactions: 0, updated_at: new Date().toISOString() })
+            .eq('id', usageData.id)
+            .select();
+          if (updateError) {
+            console.error('[InteractionCounter][resetInteractions] Erro ao resetar interações:', updateError);
+          } else {
+            console.log('[InteractionCounter][resetInteractions] Interações resetadas:', updateResult);
+          }
+        } else {
+          console.warn('[InteractionCounter][resetInteractions] Nenhum usageData encontrado para o website:', getWebsite());
         }
       }
     } catch (error) {
@@ -81,28 +98,25 @@ const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          const { data: botData } = await supabase
-            .from('super_bots')
-            .select('id, website')
+          const { data: usageData, error } = await supabase
+            .from('client_bot_usage')
+            .select('*')
             .eq('website', getWebsite())
+            .eq('enabled', true)
             .single();
-
-          if (botData) {
-            const { data: counters } = await supabase.rpc('get_current_counters', {
-              p_website: getWebsite(),
-              p_bot_id: botData.id
-            });
-
-            if (counters && counters.length > 0) {
-              setInteractionCount(counters[0].interactions);
-            }
+          if (error) {
+            console.error('[InteractionCounter][loadInitialCount] Erro ao buscar usageData:', error);
+          }
+          if (usageData) {
+            setInteractionCount(usageData.interactions || 0);
+          } else {
+            console.warn('[InteractionCounter][loadInitialCount] Nenhum usageData encontrado para o website:', getWebsite());
           }
         }
       } catch (error) {
         console.error('Error loading initial interaction count:', error);
       }
     };
-
     loadInitialCount();
   }, []);
 
