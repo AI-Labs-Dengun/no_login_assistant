@@ -388,21 +388,30 @@ const ChatComponent = () => {
         // Registra o uso no banco de dados
         try {
           const website = getWebsite();
-          const { data: botData } = await supabase
+          console.log('[ChatComponent][handleSendMessage] Hostname/website:', website);
+          console.log('[ChatComponent][handleSendMessage] Tokens usados:', data.tokenCount);
+          const { data: botData, error: botDataError } = await supabase
             .from('super_bots')
             .select('id')
             .eq('website', website)
             .single();
 
+          if (botDataError) {
+            console.error('[ChatComponent][handleSendMessage] Erro ao buscar botData:', botDataError);
+          }
           if (botData) {
-            await db.clientBotUsage.updateClientUsage({
+            console.log('[ChatComponent][handleSendMessage] botData:', botData);
+            const updateResult = await db.clientBotUsage.updateClientUsage({
               website,
               tokens: data.tokenCount,
               interactions: 1
             });
+            console.log('[ChatComponent][handleSendMessage] Resultado do updateClientUsage:', updateResult);
+          } else {
+            console.warn('[ChatComponent][handleSendMessage] Nenhum botData encontrado para o website:', website);
           }
         } catch (error) {
-          console.error('Erro ao atualizar uso:', error);
+          console.error('[ChatComponent][handleSendMessage] Erro ao atualizar uso:', error);
         }
       }
 
@@ -746,21 +755,30 @@ const ChatComponent = () => {
         // Registra o uso no banco de dados
         try {
           const website = getWebsite();
-          const { data: botData } = await supabase
+          console.log('[ChatComponent][handleTooltipClick] Hostname/website:', website);
+          console.log('[ChatComponent][handleTooltipClick] Tokens usados:', data.tokenCount);
+          const { data: botData, error: botDataError } = await supabase
             .from('super_bots')
             .select('id')
             .eq('website', website)
             .single();
 
+          if (botDataError) {
+            console.error('[ChatComponent][handleTooltipClick] Erro ao buscar botData:', botDataError);
+          }
           if (botData) {
-            await db.clientBotUsage.updateClientUsage({
+            console.log('[ChatComponent][handleTooltipClick] botData:', botData);
+            const updateResult = await db.clientBotUsage.updateClientUsage({
               website,
               tokens: data.tokenCount,
               interactions: 1
             });
+            console.log('[ChatComponent][handleTooltipClick] Resultado do updateClientUsage:', updateResult);
+          } else {
+            console.warn('[ChatComponent][handleTooltipClick] Nenhum botData encontrado para o website:', website);
           }
         } catch (error) {
-          console.error('Erro ao atualizar uso:', error);
+          console.error('[ChatComponent][handleTooltipClick] Erro ao atualizar uso:', error);
         }
       }
 
