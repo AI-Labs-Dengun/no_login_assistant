@@ -96,6 +96,7 @@ export const db = {
     async updateClientUsage({ website, tokens = 0, interactions = 1 }: { website: string, tokens?: number, interactions?: number }) {
       try {
         console.log('[clientBotUsage][updateClientUsage] INICIO', { website, tokens, interactions });
+        
         // Busca registro existente
         const { data: existingDataArr, error: checkError } = await supabase
           .from('client_bot_usage')
@@ -112,8 +113,48 @@ export const db = {
         }
 
         if (!existingData) {
-          console.error(`[clientBotUsage][updateClientUsage][DEBUG] Nenhum registro encontrado para o website: ${website} com enabled=true`);
-          throw new Error(`Nenhum registro encontrado para o website: ${website}`);
+          console.log('[clientBotUsage][updateClientUsage][DEBUG] Nenhum registro encontrado, tentando inicializar...');
+          
+          // Usar função de inicialização
+          const { initializeBotUsageForCurrentWebsite } = await import('./initializeBotUsage');
+          const initialized = await initializeBotUsageForCurrentWebsite();
+          
+          if (!initialized) {
+            throw new Error(`Não foi possível inicializar registro para o website: ${website}`);
+          }
+          
+          // Tentar buscar novamente após inicialização
+          const { data: newDataArr, error: newCheckError } = await supabase
+            .from('client_bot_usage')
+            .select('*')
+            .eq('website', website)
+            .eq('enabled', true)
+            .limit(1);
+          
+          if (newCheckError) throw newCheckError;
+          const newData = Array.isArray(newDataArr) && newDataArr.length > 0 ? newDataArr[0] : null;
+          
+          if (!newData) {
+            throw new Error(`Registro não encontrado após inicialização para o website: ${website}`);
+          }
+          
+          // Atualizar o registro recém-criado
+          const updatePayload = {
+            tokens_used: (newData.tokens_used || 0) + tokens,
+            interactions: (newData.interactions || 0) + interactions,
+            updated_at: new Date().toISOString()
+          };
+          
+          const { data: finalData, error: finalError } = await supabase
+            .from('client_bot_usage')
+            .update(updatePayload)
+            .eq('id', newData.id)
+            .select()
+            .single();
+            
+          if (finalError) throw finalError;
+          console.log('[clientBotUsage][updateClientUsage][DEBUG] Registro inicializado e atualizado:', finalData);
+          return finalData;
         }
 
         // Atualiza o registro existente apenas incrementando

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useTheme } from '../app/providers/ThemeProvider';
 import { supabase, db } from '../lib/supabase';
+import { getWebsiteUrl } from '../lib/utils';
 
 interface InteractionContextType {
   interactionCount: number;
@@ -17,10 +18,9 @@ const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Função para obter a URL do website
   const getWebsite = () => {
-    let origin = window.location.origin.replace(/^http:\/\//, 'https://');
-    if (!origin.endsWith('/')) origin += '/';
-    console.log('[InteractionCounter][getWebsite] Valor de website buscado:', origin);
-    return origin;
+    const website = getWebsiteUrl();
+    console.log('[InteractionCounter][getWebsite] Valor de website buscado:', website);
+    return website;
   };
 
   const addInteraction = async () => {
