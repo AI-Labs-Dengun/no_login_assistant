@@ -392,11 +392,14 @@ const ChatComponent = () => {
           const website = getWebsite();
           console.log('[ChatComponent][handleSendMessage] Hostname/website:', website);
           console.log('[ChatComponent][handleSendMessage] Tokens usados:', data.tokenCount);
-          const { data: botData, error: botDataError } = await supabase
+          const { data: botDataArr, error: botDataError } = await supabase
             .from('client_bot_usage')
             .select('id')
             .eq('website', website)
-            .single();
+            .eq('enabled', true)
+            .limit(1);
+
+          const botData = Array.isArray(botDataArr) && botDataArr.length > 0 ? botDataArr[0] : null;
 
           if (botDataError) {
             console.error('[ChatComponent][handleSendMessage] Erro ao buscar botData:', botDataError);
@@ -759,12 +762,14 @@ const ChatComponent = () => {
           const website = getWebsite();
           console.log('[ChatComponent][handleTooltipClick] Hostname/website:', website);
           console.log('[ChatComponent][handleTooltipClick] Tokens usados:', data.tokenCount);
-          const { data: usageData, error: usageDataError } = await supabase
+          const { data: usageDataArr, error: usageDataError } = await supabase
             .from('client_bot_usage')
             .select('id')
             .eq('website', website)
             .eq('enabled', true)
-            .single();
+            .limit(1);
+
+          const usageData = Array.isArray(usageDataArr) && usageDataArr.length > 0 ? usageDataArr[0] : null;
 
           if (usageDataError) {
             console.error('[ChatComponent][handleTooltipClick] Erro ao buscar usageData:', usageDataError);
