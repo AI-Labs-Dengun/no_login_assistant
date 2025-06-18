@@ -323,9 +323,11 @@ const ChatComponent = () => {
 
   // Função para obter a URL do website
   const getWebsite = () => {
-    const origin = window.location.origin;
-    // Garante que a URL use HTTPS
-    return origin.replace(/^http:\/\//, 'https://');
+    let origin = window.location.origin.replace(/^http:\/\//, 'https://');
+    if (!origin.endsWith('/')) origin += '/';
+    // ETAPA 5: Log de teste para mostrar o valor exato buscado
+    console.log('[ETAPA 5][getWebsite] Valor de website buscado:', origin);
+    return origin;
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
