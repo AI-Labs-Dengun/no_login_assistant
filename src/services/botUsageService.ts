@@ -28,7 +28,7 @@ export const botUsageService = {
   // Obter informações do bot pela URL e usuário atual
   async getBotInfo(userId: string): Promise<BotInfo> {
     const website = window.location.origin;
-    console.log('Obtendo informações do bot:', { website, userId });
+    console.log('[getBotInfo][DEBUG] Iniciando busca de informações do bot para website:', website, 'userId:', userId);
 
     // Buscar diretamente na tabela client_bot_usage
     const { data: dataArr, error } = await supabase
@@ -40,7 +40,20 @@ export const botUsageService = {
       .limit(1);
     const data = Array.isArray(dataArr) && dataArr.length > 0 ? dataArr[0] : null;
 
-    console.log('Resultado da busca do bot em client_bot_usage:', { data, error });
+    console.log('[getBotInfo][DEBUG] Resultado da busca:', data, 'Erro:', error);
+    if (data) {
+      console.log('[getBotInfo][DEBUG] Dados do bot encontrados:', {
+        user_id: data.user_id,
+        tenant_id: data.tenant_id,
+        bot_id: data.bot_id,
+        enabled: data.enabled,
+        website: data.website,
+        bot_name: data.bot_name,
+        status: data.status,
+        available_interactions: data.available_interactions,
+        current_interactions: data.interactions
+      });
+    }
 
     if (error) {
       console.error('Erro ao obter informações do bot:', error);
