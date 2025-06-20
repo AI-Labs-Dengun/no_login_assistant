@@ -17,7 +17,6 @@ import TypingIndicator from '../../components/TypingIndicator';
 import { useTokenCounter, TokenCounter } from '../../components/TokenCounter';
 import { useInteractionCounter, InteractionCounter } from '../../components/InteractionCounter';
 import { supabase, db } from '../../lib/supabase';
-import { getWebsiteUrl } from '../../lib/utils';
 
 const EmojiPicker = dynamic(() => import('@emoji-mart/react').then(mod => mod.default), {
   ssr: false,
@@ -102,18 +101,6 @@ const ChatComponent = () => {
       greetingLoadedRef.current = true;
       resetTokens(); // Resetar o contador de tokens quando iniciar nova conversa
       resetInteractions(); // Resetar o contador de interações quando iniciar nova conversa
-      
-      // Inicializar registro de uso do bot
-      (async () => {
-        try {
-          const { initializeBotUsageForCurrentWebsite } = await import('../../lib/initializeBotUsage');
-          const result = await initializeBotUsageForCurrentWebsite();
-          console.log('[ChatComponent][initBot] Resultado da inicialização:', result);
-        } catch (error) {
-          console.error('[ChatComponent][initBot] Erro ao inicializar registro de uso do bot:', error);
-        }
-      })();
-      
       (async () => {
         let greetingMsg = null;
         try {
@@ -336,10 +323,11 @@ const ChatComponent = () => {
 
   // Função para obter a URL do website
   const getWebsite = () => {
-    const website = getWebsiteUrl();
+    let origin = window.location.origin.replace(/^http:\/\//, 'https://');
+    if (!origin.endsWith('/')) origin += '/';
     // ETAPA 5: Log de teste para mostrar o valor exato buscado
-    console.log('[ETAPA 5][getWebsite] Valor de website buscado:', website);
-    return website;
+    console.log('[ETAPA 5][getWebsite] Valor de website buscado:', origin);
+    return origin;
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {

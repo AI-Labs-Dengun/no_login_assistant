@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useTheme } from '../app/providers/ThemeProvider';
 import { supabase, db } from '../lib/supabase';
-import { getWebsiteUrl } from '../lib/utils';
 
 interface TokenContextType {
   tokenCount: number;
@@ -18,9 +17,10 @@ const TokenProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   // Função para obter a URL do website
   const getWebsite = () => {
-    const website = getWebsiteUrl();
-    console.log('[TokenCounter][getWebsite] Valor de website buscado:', website);
-    return website;
+    let origin = window.location.origin.replace(/^http:\/\//, 'https://');
+    if (!origin.endsWith('/')) origin += '/';
+    console.log('[TokenCounter][getWebsite] Valor de website buscado:', origin);
+    return origin;
   };
 
   const addTokens = async (count: number) => {

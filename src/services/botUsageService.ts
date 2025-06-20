@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabase';
 import { db } from '../lib/supabase';
-import { getWebsiteUrl } from '../lib/utils';
 
 export interface BotInfo {
   bot_id: string;
@@ -25,15 +24,21 @@ export interface UsageResult {
   error?: string;
 }
 
-// Função utilitária para obter a URL completa padronizada
-function getWebsite() {
-  return getWebsiteUrl();
+// Função utilitária para obter apenas o hostname limpo
+function getCleanWebsite() {
+  if (typeof window === 'undefined') return '';
+  let origin = window.location.origin;
+  // Remove protocolo
+  origin = origin.replace(/^https?:\/\//, '');
+  // Remove barra final, se houver
+  if (origin.endsWith('/')) origin = origin.slice(0, -1);
+  return origin;
 }
 
 export const botUsageService = {
   // Obter informações do bot pela URL e usuário atual
   async getBotInfo(userId: string): Promise<BotInfo> {
-    const website = getWebsite();
+    const website = getCleanWebsite();
     console.log('[getBotInfo][DEBUG] Iniciando busca de informações do bot para website:', website, 'userId:', userId);
 
     // Buscar diretamente na tabela client_bot_usage
