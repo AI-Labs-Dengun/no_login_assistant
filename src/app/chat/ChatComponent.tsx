@@ -14,9 +14,10 @@ import data from '@emoji-mart/data';
 import { Toaster } from 'react-hot-toast';
 import showToast from '../../lib/toast';
 import TypingIndicator from '../../components/TypingIndicator';
-import { useTokenCounter, TokenCounter } from '../../components/TokenCounter';
-import { useInteractionCounter, InteractionCounter } from '../../components/InteractionCounter';
+import { useTokenCounter, TokenProvider } from '../../components/TokenCounter';
+import { useInteractionCounter, InteractionProvider } from '../../components/InteractionCounter';
 import { supabase, db } from '../../lib/supabase';
+import { logWebsiteInfo, getCleanWebsite } from '@/lib/websiteUtils';
 
 const EmojiPicker = dynamic(() => import('@emoji-mart/react').then(mod => mod.default), {
   ssr: false,
@@ -321,15 +322,6 @@ const ChatComponent = () => {
     }
   };
 
-  // Função para obter a URL do website
-  const getWebsite = () => {
-    let origin = window.location.origin.replace(/^http:\/\//, 'https://');
-    if (!origin.endsWith('/')) origin += '/';
-    // ETAPA 5: Log de teste para mostrar o valor exato buscado
-    console.log('[ETAPA 5][getWebsite] Valor de website buscado:', origin);
-    return origin;
-  };
-
   const handleSendMessage = async (e: React.FormEvent) => {
     if (greetingLoading) return;
     e.preventDefault();
@@ -389,14 +381,19 @@ const ChatComponent = () => {
 
         // Registra o uso no banco de dados
         try {
-          const website = getWebsite();
-          console.log('[ChatComponent][handleSendMessage] Hostname/website:', website);
-          console.log('[ChatComponent][handleSendMessage] Tokens usados:', data.tokenCount);
+          const hostname = getCleanWebsite();
+          console.log('[ChatComponent][handleSendMessage] === INICIO ===', { hostname, tokens: data.tokenCount });
+          
+          // Log informações detalhadas do website
+          logWebsiteInfo();
+          
           await db.clientBotUsage.updateClientUsage({
-            website,
+            hostname,
             tokens: data.tokenCount,
             interactions: 1
           });
+          
+          console.log('[ChatComponent][handleSendMessage] === SUCESSO ===', 'Uso registrado com sucesso');
         } catch (error) {
           console.error('[ChatComponent][handleSendMessage] Erro ao atualizar uso:', error);
         }
@@ -710,19 +707,20 @@ const ChatComponent = () => {
     }
   }, [isTypewriterActive, isNearBottom]);
 
-  const handleTooltipClick = async (tooltip: string) => {
+  const handleTooltipClick = async (prompt: string) => {
     if (greetingLoading) return;
     handleFirstInteraction();
     setIsTyping(true);
-    const userMsg: Message = {
-      id: 'user-' + Date.now(),
-      content: tooltip,
-      role: 'user',
-      created_at: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, userMsg]);
-    setLoading(true);
-    const prompt = `${tooltip}\n\nPlease answer ONLY in ${languageNames[language as Language] || 'English'}, regardless of the language of the question. Do not mention language or your ability to assist in other languages. Keep your answer short and concise.`;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: 'user-' + Date.now(),
+        content: prompt,
+        role: 'user',
+        created_at: new Date().toISOString(),
+      },
+    ]);
+
     try {
       const res = await fetch('/api/chatgpt', {
         method: 'POST',
@@ -739,16 +737,21 @@ const ChatComponent = () => {
         // Atualiza o contador de interações
         addInteraction();
 
-        // Registra o uso no banco de dados usando a tabela correta (client_bot_usage)
+        // Registra o uso no banco de dados usando hostname
         try {
-          const website = getWebsite();
-          console.log('[ChatComponent][handleTooltipClick] Hostname/website:', website);
-          console.log('[ChatComponent][handleTooltipClick] Tokens usados:', data.tokenCount);
+          const hostname = getCleanWebsite();
+          console.log('[ChatComponent][handleTooltipClick] === INICIO ===', { hostname, tokens: data.tokenCount });
+          
+          // Log informações detalhadas do website
+          logWebsiteInfo();
+          
           await db.clientBotUsage.updateClientUsage({
-            website,
+            hostname,
             tokens: data.tokenCount,
             interactions: 1
           });
+          
+          console.log('[ChatComponent][handleTooltipClick] === SUCESSO ===', 'Uso registrado com sucesso');
         } catch (error) {
           console.error('[ChatComponent][handleTooltipClick] Erro ao atualizar uso:', error);
         }
@@ -1104,8 +1107,8 @@ const ChatComponent = () => {
         modalRef={voiceModalRef}
         aiMessage={currentAiMessage}
       />
-      <TokenCounter />
-      <InteractionCounter />
+      <TokenProvider>{null}</TokenProvider>
+      <InteractionProvider>{null}</InteractionProvider>
     </div>
   );
 };
